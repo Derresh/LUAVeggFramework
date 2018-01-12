@@ -638,7 +638,7 @@ function executePowerMacro(power)
   power.PowerHasTargets = power.Chk_CustomCodeHasTarget ==1 or primaryAttack.Chk_Target == 1 or secondaryAttack.Chk_Target == 1 or tertiaryAttack.Chk_Target == 1
   if not(power.Chk_Supplement == 1) or power.PowerHasTargets or primaryAttack.Chk_Attack == 1 or secondaryAttack.Chk_Attack == 1 or tertiaryAttack.Chk_Attack == 1 then
     local private = fromStr(token.properties.Private.value, nil, ";")
-    if (type(private)~=table) then private = {} end
+    if (type(private)~="table") then private = {} end
     local inputs = {{prompt=safePowerName, type="LABEL", text=false}}
     if primaryAttack.Chk_Attack == 1 then addExecuteAttack(inputs, primaryAttack, private.PrimaryAttack, private.PrimaryDamage) end
     if secondaryAttack.Chk_Attack == 1 then addExecuteAttack(inputs, secondaryAttack, private.SecondaryAttack, private.SecondaryDamage, "sec", "(2nd)") end
