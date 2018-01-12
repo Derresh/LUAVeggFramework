@@ -1,0 +1,12 @@
+<html>
+<!-- Veggiesama's buttonTooltip macro, MapTool B53 -->
+<!-- Extremely hacky way to find a PowerName based on its macro button index -->
+[H: macroButtonIndex = macro.args]
+[H: macroCommand = getMacroCommand(macroButtonIndex)]
+[H: powerName = substring(macroCommand, indexOf(macroCommand, '"PowerName": "')+14, indexOf(macroCommand, '",',  indexOf(macroCommand, '"PowerName": "')))]
+[H: unsafePowerName = replace(powerName, "`", "'")]
+[H: power = json.get(PowerLibrary, unsafePowerName)]
+<table border=0 bgcolor="white" cellpadding=0 cellspacing=0 width="500px">
+[MACRO("pmDisplayPowerHTML@Lib:Veg"):power]
+</table>
+</html>
