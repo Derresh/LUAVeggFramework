@@ -85,7 +85,7 @@ function evalConditional(cond, attack, target)
     if attack.Type == cond.Type and inverse or attack.Type ~= cond.Type and not inverse then return
     else text = (inverse and "not " or "")..VARS.ATTACK_TYPES[cond.Type + 1] end
   elseif cond.From == 4 then --CA
-    if attack.CA and inverse or attack.CA and not inverse then return
+    if attack.CA and inverse or not attack.CA and not inverse then return
     else 
       text = inverse and "no CA" or "CA"
       targetSpecific = true
