@@ -107,7 +107,7 @@ function evalConditional(cond, attack, target)
     else text = (inverse and "not " or "")..state end
   elseif cond.From == 8 then
     local kw = 0;
-    for i, damagekw in VARS.DAMAGE_KEYWORDS do
+    for i, damagekw in ipairs(VARS.DAMAGE_KEYWORDS) do
       kw = kw + (table.contains(attack.Keywords, damagekw) and 1)      
     end
     if kw == 0 and inverse or kw > 0 and not inverse then return
