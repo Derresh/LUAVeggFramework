@@ -197,7 +197,6 @@ function makeDamageState(attack, equip)
   if not (attack.Chk_IgnoreEnh == 1) and attack.DmgDice ~= 0 then state.enh = tonumber(equip.Enhance or 0) end
   state.misc = 0
   if not (attack.Chk_IgnoreMisc == 1) and attack.DmgDice ~= 0 then state.misc = tonumber(equip.Dmg or 0) end
-  state.powerBonus = tonumber(eval(attack.DmgBonus) or 0)
   state.dmgType = attack.DmgType
   if state.dmgType == nil or state.dmgType == 0 or state.dmgType:lower() == "auto" or state.dmgType == "--" or state.dmgType == "." then
     local dm = {}
@@ -225,6 +224,7 @@ function executeDamage(attack, equip)
   attack.isCrit = false
   local equip = getWeapon(attack)
   local state = makeDamageState(attack, equip)
+  state.powerBonus = tonumber(eval(attack.DmgBonus) or 0)
   if not (attack.Chk_IgnoreCondDmg == 1) then
     for i = 1, 100 do
       local c = "Conditional"..i
@@ -275,6 +275,7 @@ end
 function executeCrit(attack, equip)
   attack.isCrit = true
   local state = makeDamageState(attack, equip)
+  state.powerBonus = tonumber(eval(attack.DmgBonusMax) or 0)
   if not (attack.Chk_IgnoreCondDmg == 1) then
     for i = 1, 100 do
       local c = "Conditional"..i
