@@ -21,7 +21,7 @@ function setupVars ()
     DAMAGE_DICE={"No Damage Roll (only apply EXTRA damage)","Damage bonus only (apply boni to damagerolls)","1x Damage Roll","2x Damage Roll","3x Damage Roll","4x Damage Roll","5x Damage Roll","6x Damage Roll","7x Damage Roll","8x Damage Roll","9x Damage Roll"},
     DAMAGE_ROLL={"[W] (from equipment)","d1","d2","d3","d4","d5","d6","d7","d8","d9","d10","d11","d12","d13","d14","d15","d16","d17","d18","d19","d20"},
     WEAPON_SLOTS={"None","Mainhand","Offhand","Implement1","Implement2"},
-    DAMAGE_KEYWORDS={"Acid","Cold","Fire","Force","Lightning","Necrotic","Psychic","Radiant","Thunder"},
+    DAMAGE_KEYWORDS={"acid","cold","fire","force","lightning","necrotic","psychic","radiant","thunder"},
     S_WIDTH=15,
     M_WIDTH=40,
     L_WIDTH=60,
