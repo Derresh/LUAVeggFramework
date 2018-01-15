@@ -106,11 +106,11 @@ function evalConditional(cond, attack, target)
     if token.states[state] and inverse or not token.states[state] and not inverse then return
     else text = (inverse and "not " or "")..state end
   elseif cond.From == 8 then
-    local kw = 0;
+    local kw = false;
     for i, damagekw in ipairs(VARS.DAMAGE_KEYWORDS) do
-      kw = kw + (table.contains(attack.Keywords, damagekw) and 1)      
+      if table.contains(attack.Keywords, damagekw) then kw = true end
     end
-    if kw == 0 and inverse or kw > 0 and not inverse then return
+    if not kw and inverse or kw and not inverse then return
     else text = (inverse and "not " or "").."untyped" end
   elseif cond.From == 9 then
     local exp = eval(cond.Expression)
