@@ -417,7 +417,7 @@ function executeAttackRoll(attack, equip)
   elseif vsDefense ~= "None" then print("<i><b>",result, "</b> vs. ", vsDefense)
   end
   if (attack.target ~= nil and vsDefense ~= "None") and (attack.target.propertyType == "Player (VEG)" or attack.target.propertyType == "Monster (VEG)") then 
-    executeComparison(attack.target, result, vsDefense) 
+    executeComparison(attack.target, result, vsDefense, die) 
   end
   print("</i>")
   if not token.npc or TOOLTIPS == 0 then print("</span>") end
@@ -425,7 +425,7 @@ function executeAttackRoll(attack, equip)
   return die
 end
 
-function executeComparison(target, result, defense) 
+function executeComparison(target, result, defense, die) 
   local targetNumber = 0
   local show = false
   if target.propertyType == "Player (VEG)" then
@@ -439,7 +439,7 @@ function executeComparison(target, result, defense)
     targetNumber = target.properties[defense].value
     show = SHOW_NPC == 1
   end
-  if show then print(result>=targetNumber and "<b> (Hit)</b>" or "<b> (Miss)</b>") end
+  if show then print(die >= 2 and result>=targetNumber and "<b> (Hit)</b>" or "<b> (Miss)</b>") end
 end
 
 function getAC(target)
@@ -874,9 +874,9 @@ function executePowerMacro(power)
 
   if power.Chk_CustomCode == 1 and not (DISABLE == 1) then
     print("<table border=0 cellspacing=0><tr bgcolor='#D6D7C6'>")
-    if power.useTargetsChoice == VARS.TARGET_CHOICE_TEXTBOX and power.Chk_CustomCodeHasTarget == 1 then
+    if power.UseTargetsChoice == VARS.TARGET_CHOICE_TEXTBOX and power.Chk_CustomCodeHasTarget == 1 then
       print("<td><i><b>Target:</b> ", power.CustomTarget, "&nbsp;</i></td><td bgcolor='white'>&#8212</td>")
-    elseif power.useTargetsChoice == VARS.TARGET_CHOICE_SELECTION and power.Chk_CustomCodeHasTarget == 1 then
+    elseif power.UseTargetsChoice == VARS.TARGET_CHOICE_SELECTION and power.Chk_CustomCodeHasTarget == 1 then
       print("<td><img height=", IMAGE_SIZE, " width=", IMAGE_SIZE, " src='", power.CustomTarget.Img, "'></img></td><td><i> (", power.CustomTarget.Distance, ") ", power.CustomTarget.Name)
       export("CUSTOM_TARGET", power.CustomTarget.ID)
       print("&nbsp;</i></td><td bgcolor='white'>&#8212</td>")
