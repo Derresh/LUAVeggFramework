@@ -50,6 +50,15 @@ function translateState(oldState)
   return STATE_TRANSLATIONS[oldState] or oldState
 end
 
+local function escape(s)
+  s = s:gsub('&', '&amp;')
+  s = s:gsub('<', '&lt;')
+  s = s:gsub('>', '&gt;')
+  s = s:gsub('\'', '&#39;')
+  s = s:gsub('"', '&quot;')
+  return s
+end
+
 function match(match, keywords, default)
   if match == nil or match == "0" or match == 0 or match == "--" or match == "." then return default, "" end
   if keywords == nil then keywords = {} end
@@ -251,13 +260,13 @@ function executeDamage(attack, equip)
   if not token.npc or TOOLTIPS == 0 then
     print("<span title='<html>")
     if attack.Chk_MultiDmgRolls == 1 or attack.iteration == 1 then
-      if token.pc then print("<font size=", BIG, "><i>", equip.Name, ":&nbsp;</i></font>") end
+      if token.pc then print("<font size=", BIG, "><i>", escape(escape(equip.Name)), ":&nbsp;</i></font>") end
       if dmgDiceResult > 0 then print("<font size=", BIG, ">", dmgDiceResult, "</font> (", state.dmgDiceMultiplier, "[", state.dmgDice, "]:", toStr(dmgDiceList)) end
       if state.powerBonus ~= 0 then print("+ <font size=", BIG, ">", state.powerBonus, "</font> (", attack.DmgBonus, ")") end
       if attack.DmgAbility ~= 0 then print("+ <font size=", BIG, ">", state.stat, "</font> (", VARS.ABILITY_BONUSES[attack.DmgAbility + 1] ,")") end
       if state.enh ~= 0 then print("+ <font size=", BIG, ">", state.enh, "</font> (enhance)") end
       if state.misc ~= 0 then print("+ <font size=", BIG, ">", state.misc, "</font> (misc.)") end
-      for i, v in ipairs(state.conditional) do print("+ <font size=", BIG, ">", v.value, "</font> (", v.text, ")") end 
+      for i, v in ipairs(state.conditional) do print("+ <font size=", BIG, ">", v.value, "</font> (", escape(escape(v.text)), ")") end 
       if attack.dmgMod ~= 0 then print("+ <font size=", BIG, ">", attack.dmgMod, "</font> (temp)") end
       print("= <font size=",BIGGER, ">", result, "</font>")
     end
@@ -306,7 +315,7 @@ function executeCrit(attack, equip)
   if critDmgType == nil or critDmgType == "untyped" or critDmgType == 0 then critDmgType =  "" end
   if not token.npc or TOOLTIPS == 0 then
     print("<span title='<html>")
-    if token.pc then print("<font size=", BIG, "><i>", equip.Name, ":&nbsp;</i></font>") end
+    if token.pc then print("<font size=", BIG, "><i>", escape(escape(equip.Name)), ":&nbsp;</i></font>") end
     if dmgDiceResult > 0 then print("<font size=", BIG, ">", dmgDiceResult, "</font> (", state.dmgDiceMultiplier, "[", state.dmgDice, "]:MAX") end
     if state.powerBonus ~= 0 then print("+ <font size=", BIG, ">", state.powerBonus, "</font> (", attack.DmgBonus, ":MAX)") end
     if attack.DmgAbility ~= 0 then print("+ <font size=", BIG, ">", state.stat, "</font> (", VARS.ABILITY_BONUSES[attack.DmgAbility + 1] ,")") end
@@ -317,7 +326,7 @@ function executeCrit(attack, equip)
     print("= <font size=", BIGGER, " color=red>", result, "</font>")
     if critDiceResult > 0 then print(" <font size=", BIG, " color=red>+", critDiceResult, "</font> (",equip.Enhance,"[", state.critRoll, "]: ",toStr(critDiceList), ")") end
     if critResultBonus > 0 then print(" <font size=", BIG, " color=red>+", critResultBonus, "</font> (", state.dmgDiceBonus, ")") end
-    for i, v in ipairs(state.targeted) do print("+ <font size=", BIG, ">", v.value, "</font> (", v.text, ")") end
+    for i, v in ipairs(state.targeted) do print("+ <font size=", BIG, ">", v.value, "</font> (", escape(escape(v.text)), ")") end
     print("</html>'>")
     print("<font color='red'><i>CRIT: <b>", result)
     if t>0 then print (" + ",t) end
@@ -391,7 +400,7 @@ function executeAttackRoll(attack, equip)
   local vsDefense = VARS.DEFENSE_NAMES[attack.VsDefense + 1]
   if not token.npc or TOOLTIPS == 0 then
     print("<td>&nbsp;<span title='<html>")
-    if token.pc then print("<font size=", BIG, "><i>", equip.Name, ":&nbsp;</i></font>") end
+    if token.pc then print("<font size=", BIG, "><i>", escape(escape(equip.Name)), ":&nbsp;</i></font>") end
     print("<font size=", BIG,">",die1)
     if attack.Roll ~= nil and attack.Roll>0 and attack.Roll<4 then print(", ", die2," &#8658; ", die) end
     print("</font> (d20)")
@@ -401,7 +410,7 @@ function executeAttackRoll(attack, equip)
     if enh > 0 then print("+ <font size=", BIG, ">", enh, "</font> (enhance)") end
     if feat > 0 then print("+ <font size=", BIG, ">", feat, "</font> (feat)") end
     if misc > 0 then print("+ <font size=", BIG, ">", misc, "</font> (misc)") end
-    for i, v in ipairs(conditional) do print("+ <font size=", BIG, ">", v.value, "</font> (", v.text, ")") end
+    for i, v in ipairs(conditional) do print("+ <font size=", BIG, ">", v.value, "</font> (", escape(escape(v.text)), ")") end
     if ca > 0 then print("+ <font size=", BIG, ">", ca, "</font> (CA)") end
     if powerBonusEval > 0 then print("+ <font size=", BIG, ">", powerBonusEval, "</font> (",attack.AttackBonus,")") end
     if attack.atkMod ~= 0 then print("+ <font size=", BIG, ">", attack.atkMod, "</font> (temp)") end
@@ -494,7 +503,7 @@ function executeAttack(attack, equip)
     if attack.UseTargetsChoice == VARS.TARGET_CHOICE_SELECTION then
       attack.TargetName = attack["Repeat"..i].Name
       attack.target = attack["Repeat"..i].Object
-      print("<td><img height=",IMAGE_SIZE," width=",IMAGE_SIZE, " src='",attack["Repeat"..i].Img,"'></img></td><td><i> (",attack["Repeat"..i].Distance,") ",attack.TargetName,"&nbsp;</i></td><td bgcolor='white'>&#8212</td>")
+      print("<td><img height=",IMAGE_SIZE," width=",IMAGE_SIZE, " src='",attack["Repeat"..i].Img,"'></img></td><td><i> (",attack["Repeat"..i].Distance,") ",escape(attack.TargetName),"&nbsp;</i></td><td bgcolor='white'>&#8212</td>")
     else
       print("<td>&nbsp;</td>")
     end
@@ -529,12 +538,12 @@ function executeAttack(attack, equip)
     end
     if equip.RollCode ~= nil and equip.RollCode ~= 0 and equip.RollCode ~= "" then
       local x, r = macro.evalUntrustedRaw(equip.RollCode)
-      print("<tr bgcolor='#D6D7C6'><td colspan=6><i><b>", equip.Name, ": </b>", r, "</i></td></tr>")
+      print("<tr bgcolor='#D6D7C6'><td colspan=6><i><b>", escape(equip.Name), ": </b>", r, "</i></td></tr>")
     end
   end
   if equip.AttackCode ~= nil and equip.AttackCode ~= 0 and equip.AttackCode ~= "" then
     local x2, r2 = macro.evalUntrustedRaw(equip.AttackCode)
-    print("<tr bgcolor='#D6D7C6'><td colspan=6><i><b>", equip.Name, ": </b>", r2, "</i></td></tr>")
+    print("<tr bgcolor='#D6D7C6'><td colspan=6><i><b>", escape(equip.Name), ": </b>", r2, "</i></td></tr>")
   end
 end
 
@@ -877,7 +886,7 @@ function executePowerMacro(power)
     if power.UseTargetsChoice == VARS.TARGET_CHOICE_TEXTBOX and power.Chk_CustomCodeHasTarget == 1 then
       print("<td><i><b>Target:</b> ", power.CustomTarget, "&nbsp;</i></td><td bgcolor='white'>&#8212</td>")
     elseif power.UseTargetsChoice == VARS.TARGET_CHOICE_SELECTION and power.Chk_CustomCodeHasTarget == 1 then
-      print("<td><img height=", IMAGE_SIZE, " width=", IMAGE_SIZE, " src='", power.CustomTarget.Img, "'></img></td><td><i> (", power.CustomTarget.Distance, ") ", power.CustomTarget.Name)
+      print("<td><img height=", IMAGE_SIZE, " width=", IMAGE_SIZE, " src='", power.CustomTarget.Img, "'></img></td><td><i> (", power.CustomTarget.Distance, ") ", escape(power.CustomTarget.Name))
       export("CUSTOM_TARGET", power.CustomTarget.ID)
       print("&nbsp;</i></td><td bgcolor='white'>&#8212</td>")
     end
@@ -892,7 +901,7 @@ function executePowerMacro(power)
 		if power["AssState"..i] ~= "" then
 			local state = translateState(power["AssState"..i])
 			local ss = campaign.allStates[state] or {}
-			print("<td><img height=15 width=15 src='", ss.image or "" ,"'></img></td><td><b>",macro.link(state, "toggleState@Lib:Veg", "none", state, "selected"),"</b></td>")
+			print("<td><img height=15 width=15 src='", ss.image or "" ,"'></img></td><td><b>",macro.link(escape(state), "toggleState@Lib:Veg", "none", state, "selected"),"</b></td>")
 		end
     end
     print("<td><i>on Selected Target(s)</i></td></tr></table>")
