@@ -237,6 +237,7 @@ function executeDamage(attack, equip)
   if not (attack.Chk_IgnoreCondDmg == 1) then
     for i = 1, 100 do
       local c = "Conditional"..i
+      if power[c] ~= nil then state = evalDamageConditional(power[c], attack, attack.target, state) end
       if equip[c] ~= nil then state = evalDamageConditional(equip[c], attack, attack.target, state) end
       if CONDITIONALS[c] ~= nil then state = evalDamageConditional(CONDITIONALS[c], attack, attack.target, state) end
     end
@@ -288,6 +289,7 @@ function executeCrit(attack, equip)
   if not (attack.Chk_IgnoreCondDmg == 1) then
     for i = 1, 100 do
       local c = "Conditional"..i
+      if power[c] ~= nil then state = evalDamageConditional(power[c], attack, attack.target, state) end
       if equip[c] ~= nil then state = evalDamageConditional(equip[c], attack, attack.target, state) end
       if CONDITIONALS[c] ~= nil then state = evalDamageConditional(CONDITIONALS[c], attack, attack.target, state) end
     end
@@ -373,6 +375,10 @@ function executeAttackRoll(attack, equip)
   if not (attack.Chk_IgnoreCond == 1) then
     for i = 1, 100 do
       local c = "Conditional"..i
+      if power[c] ~= nil and power[c].Affects == 2 then 
+        local r = evalConditional(power[c], attack, attack.target)
+        if r ~= nil then table.insert(conditional, {value=eval(r.Value), text=r.Text}) end
+      end
       if equip[c] ~= nil and equip[c].Affects == 2 then 
         local r = evalConditional(equip[c], attack, attack.target)
         if r ~= nil then table.insert(conditional, {value=eval(r.Value), text=r.Text}) end
@@ -512,6 +518,13 @@ function executeAttack(attack, equip)
     if not (attack.Chk_IgnoreCond == 1) then
       for i = 1, 100 do
         local c = "Conditional"..i
+	if power[c] ~= nil and power[c].Affects == 5 then 
+          local r = evalConditional(power[c], attack, attack.target)
+          if r ~= nil then 
+            attack.Keywords = table.merge(attack.Keywords, fromStr(tostring(r.Value):lower(), ","))
+            attack.Keywords = table.difference(attack.Keywords, fromStr(tostring(r.Max):lower(), ","))
+          end
+        end
         if equip[c] ~= nil and equip[c].Affects == 5 then 
           local r = evalConditional(equip[c], attack, attack.target)
           if r ~= nil then 
@@ -838,7 +851,7 @@ function executePowerMacro(power)
     end
   end
   if power.Chk_DisplayMisses == 1 and primaryAttack.Chk_Miss == 1 then print(TABLE_START, "<b>Miss:</b> ", primaryAttack.Miss, TABLE_END) end
-  if power.Chk_DisplayEffect == 1 and primaryAttack.Chk_PriEffect == 1 then print(TABLE_START, "<b>Effect:</b> ", primaryAttack.PriEffect, TABLE_END) end
+  if power.Chk_DisplayEffect == 1 and power.Chk_PriEffect == 1 then print(TABLE_START, "<b>Effect:</b> ", power.PriEffect, TABLE_END) end
   
   if secondaryAttack.Chk_Attack == 1 then
     secondaryAttack.Keywords = power.Keywords
