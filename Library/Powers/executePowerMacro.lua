@@ -229,7 +229,7 @@ function makeDamageState(attack, equip)
   return state
 end
 
-function executeDamage(attack, equip)
+function executeDamage(attack, equip, power)
   attack.isCrit = false
   local equip = getWeapon(attack)
   local state = makeDamageState(attack, equip)
@@ -282,7 +282,7 @@ function executeDamage(attack, equip)
   end
 end
 
-function executeCrit(attack, equip)
+function executeCrit(attack, equip, power)
   attack.isCrit = true
   local state = makeDamageState(attack, equip)
   state.powerBonus = tonumber(eval(attack.DmgBonusMax) or 0)
@@ -345,7 +345,7 @@ function executeCrit(attack, equip)
   end
 end
 
-function executeAttackRoll(attack, equip) 
+function executeAttackRoll(attack, equip, power) 
   local die = 0
   local die1 = 0
   local die2 = 0
@@ -494,7 +494,7 @@ function getReflex(target)
 end
 
 
-function executeAttack(attack, equip)
+function executeAttack(attack, equip, power)
   equip = equip or getWeapon(attack)
   local keywords = attack.Keywords:lower()
   for i = 1, attack.Repeat do
@@ -541,12 +541,12 @@ function executeAttack(attack, equip)
         end
       end
     end
-    local attackRoll = executeAttackRoll(attack, equip)
+    local attackRoll = executeAttackRoll(attack, equip, power)
     local isCrit = attackRoll >= attack.CritThreshold
     if not (attack.Chk_IgnoreDamage == 1) then
       print("<td bgcolor='white'>&nbsp;&#8212;&nbsp;</td><td>&nbsp;")
-      if not(isCrit) or (not(attack.Chk_MultiDmgRolls == 1) and i == 1) then executeDamage(attack, equip) end
-      if isCrit then executeCrit(attack, equip) end
+      if not(isCrit) or (not(attack.Chk_MultiDmgRolls == 1) and i == 1) then executeDamage(attack, equip, power) end
+      if isCrit then executeCrit(attack, equip, power) end
       print("&nbsp;</td></tr>")
     end
     if equip.RollCode ~= nil and equip.RollCode ~= 0 and equip.RollCode ~= "" then
@@ -840,7 +840,7 @@ function executePowerMacro(power)
     primaryAttack.Keywords = power.Keywords
     primaryAttack.Type = power.AttackType
     print("<table border=0 cellspacing=0>")
-    executeAttack(primaryAttack)
+    executeAttack(primaryAttack, nil, power)
     print("</table>")
   end
   if power.Chk_DisplayHits == 1 then
@@ -857,7 +857,7 @@ function executePowerMacro(power)
     secondaryAttack.Keywords = power.Keywords
     secondaryAttack.Type = power.AttackType
     print("<table border=0 cellspacing=0>")
-    executeAttack(secondaryAttack)
+    executeAttack(secondaryAttack, nil, power)
     print("</table>")
   end
   if power.Chk_DisplayHits == 1 then
@@ -874,7 +874,7 @@ function executePowerMacro(power)
     tertiaryAttack.Keywords = power.Keywords
     tertiaryAttack.Type = power.AttackType
     print("<table border=0 cellspacing=0>")
-    executeAttack(tertiaryAttack)
+    executeAttack(tertiaryAttack, nil, power)
     print("</table>")
   end
   if power.Chk_DisplayHits == 1 then
