@@ -1,0 +1,303 @@
+<!-- Veggiesama's characterSheet macro, MapTool B74 -->
+[MACRO("pmSetupVars@Lib:Veg"):""]
+[H: varsFromStrProp(macro.return)]
+[MACRO("pmSetupStates@Lib:Veg"):""]
+[H: varsFromStrProp(macro.return)]
+[H: abilScoreList = getLibProperty("ABILITY_NAMES", "Lib:Veg")]
+[H: abilScoreList = json.toList(abilScoreList)]
+[H: abilScoreList = listAppend(abilScoreList, "None")]
+[H: abilVarList = getLibProperty("ABILITY_VARS", "Lib:Veg")]
+[H: abilVarList = json.toList(abilVarList)]
+[H: acForceList   = listInsert(abilVarList, 0, "None (wearing heavy armor)")]
+[H: acForceList   = listInsert(acForceList, 0, "Dex or Int (take highest)")]
+[H: fortForceList = listInsert(abilVarList, 0, "Str or Con (take highest)")]
+[H: refForceList  = listInsert(abilVarList, 0, "Dex or Int (take highest)")]
+[H: willForceList = listInsert(abilVarList, 0, "Wis or Cha (take highest)")]
+
+[h: ACBonuses=setStrProp(ACBonuses,"Temporary",getStrProp(ACBonuses,"Temporary",0))]
+[h: ACBonuses=setStrProp(ACBonuses,"tillShortRest",getStrProp(ACBonuses,"tillShortRest",0))]
+[h: ACBonuses=setStrProp(ACBonuses,"tillExtRest",getStrProp(ACBonuses,"tillExtRest",0))]
+
+[h: FortBonuses=setStrProp(FortBonuses,"Temporary",getStrProp(FortBonuses,"Temporary",0))]
+[h: FortBonuses=setStrProp(FortBonuses,"tillShortRest",getStrProp(FortBonuses,"tillShortRest",0))]
+[h: FortBonuses=setStrProp(FortBonuses,"tillExtRest",getStrProp(FortBonuses,"tillExtRest",0))]
+
+[h: RefBonuses=setStrProp(RefBonuses,"Temporary",getStrProp(RefBonuses,"Temporary",0))]
+[h: RefBonuses=setStrProp(RefBonuses,"tillShortRest",getStrProp(RefBonuses,"tillShortRest",0))]
+[h: RefBonuses=setStrProp(RefBonuses,"tillExtRest",getStrProp(RefBonuses,"tillExtRest",0))]
+
+[h: WillBonuses=setStrProp(WillBonuses,"Temporary",getStrProp(WillBonuses,"Temporary",0))]
+[h: WillBonuses=setStrProp(WillBonuses,"tillShortRest",getStrProp(WillBonuses,"tillShortRest",0))]
+[h: WillBonuses=setStrProp(WillBonuses,"tillExtRest",getStrProp(WillBonuses,"tillExtRest",0))]
+
+
+
+[h:conditional1 = json.get(CustomRestCode, "Conditional1")]
+[H, IF(json.isEmpty(conditional1)): conditional1="{}"]
+[H: conditional2 = json.get(CustomRestCode, "Conditional2")]
+[H, IF(json.isEmpty(conditional2)): conditional2="{}"]
+[H: conditional3 = json.get(CustomRestCode, "Conditional3")]
+[H, IF(json.isEmpty(conditional3)): conditional3="{}"]
+[H: conditional4 = json.get(CustomRestCode, "Conditional4")]
+[H, IF(json.isEmpty(conditional4)): conditional4="{}"]
+[H: conditional5 = json.get(CustomRestCode, "Conditional5")]
+[H, IF(json.isEmpty(conditional5)): conditional5="{}"]
+[h:conditional6 = json.get(CustomRestCode, "Conditional6")]
+[H, IF(json.isEmpty(conditional6)): conditional6="{}"]
+[H: conditional7 = json.get(CustomRestCode, "Conditional7")]
+[H, IF(json.isEmpty(conditional7)): conditional7="{}"]
+[H: conditional8 = json.get(CustomRestCode, "Conditional8")]
+[H, IF(json.isEmpty(conditional8)): conditional8="{}"]
+[H: conditional9 = json.get(CustomRestCode, "Conditional9")]
+[H, IF(json.isEmpty(conditional9)): conditional9="{}"]
+[H: conditional10 = json.get(CustomRestCode, "Conditional10")]
+[H, IF(json.isEmpty(conditional10)): conditional10="{}"]
+
+
+<!-- Show the dialog box -->
+[H: status = input(
+    "tab0 | Abilities || TAB",
+    "Level | " + Level + " | Character level    | TEXT | WIDTH=4",
+    "Speed     | " + Speed +  " | Speed (in squares)    | TEXT | WIDTH=4",
+    "AbilityScores | " + AbilityScores + " | Ability scores | PROPS",
+    "blah | <html><br><b>Hit points and healing surges</b></html> | | LABEL | SPAN=TRUE",
+    "AbilityScoreForHPIndex | " + abilScoreList  + "   | Ability score for hit points | LIST | SELECT=" + AbilityScoreForHPIndex,
+    "ClassFirstLevelHP | " + ClassFirstLevelHP + " | 1st level hit points | TEXT | WIDTH=4",
+    "ClassPerLevelHP | " + ClassPerLevelHP + " | Per level hit points | TEXT | WIDTH=4",
+    "ExtraHP | " + ExtraHP + " | Bonus hit points | TEXT | WIDTH=4",
+    "ClassBaseSurgesPerDay | " + ClassBaseSurgesPerDay + " | Base healing surges | TEXT | WIDTH=4",
+    "ExtraSurges | " + ExtraSurges + " | Extra healing surges | TEXT | WIDTH=4",
+    "ExtraSurgeValue | " + ExtraSurgeValue + " | Bonus to h. surge value | TEXT | WIDTH=4",
+    "blah | <html><br><b>Initiative</b> (Do <b>NOT</b> add Dexterity or level bonuses)</html> | | LABEL | SPAN=TRUE",
+    "InitiativeBonus | " + InitiativeBonus + " | Initiative bonus | TEXT | WIDTH=4",
+    "blah | <html><br><b>Saving throws</b><br>(Only add <b>universal bonuses</b> here, like Human Perseverance)</html> | | LABEL | SPAN=TRUE",
+    "SaveBonus | " + SaveBonus + "| Saving throw bonus | TEXT | WIDTH=4",
+    "blah | <html><br><b>Miscellaneous</b></html> | | LABEL | SPAN=TRUE",
+    "MaxPP | " + MaxPP + "| Maximum power points | TEXT | WIDTH=4",
+
+    "tab1 | Defenses || TAB",
+    "ArmorBonus | " + ArmorBonus  + " | Armor bonus  | TEXT | WIDTH=4",
+    "ShieldBonus| " + ShieldBonus + " | Shield bonus  | TEXT | WIDTH=4",
+    "ACForce    | " + acForceList  + "   | AC ability | LIST | SELECT=" + ACForce,
+    "ACBonuses  | " + ACBonuses   + "    | AC bonuses | PROPS",
+    "FortForce  | " + fortForceList  + " | Fortitude ability | LIST | SELECT=" + FortForce,
+    "FortBonuses| " + FortBonuses + "    | Fortitude bonuses | PROPS",
+    "RefForce   | " + refForceList  + "  | Reflex ability | LIST | SELECT=" + RefForce,
+    "RefBonuses | " + RefBonuses  + "    | Reflex bonuses | PROPS",
+    "WillForce  | " + willForceList  + " | Will ability | LIST | SELECT=" + WillForce,
+    "WillBonuses| " + WillBonuses + "    | Will bonuses | PROPS",
+
+    "tab2 | Skills || TAB",
+    "blah | <html><b>Do NOT add bonuses from abilities,  level, or ACP here:</b></html> | | LABEL | SPAN=TRUE",
+    "blah | <html><b>DO include +5 training, racial, feat, etc. bonuses.</b></html> | | LABEL | SPAN=TRUE",
+    "SkillBonuses | " + SkillBonuses + " | Set skill bonuses | PROPS",
+
+    "blah | <html><b>Add together both armor/shield ACPs here:</b></html> | | LABEL | SPAN=TRUE",
+    "ArmorCheckPenalty | " + ArmorCheckPenalty + " | Armor check penalty | TEXT | WIDTH=4",
+
+    "tab3 | Misc || TAB",
+    "blah | <html>Sometimes it is useful to have a couple extra variables<br>for players to use for whatever they want. The Misc variables<br>are for that purpose. You might use Misc variables for your<br>Sneak Attack damage roll, for elevation, for gold pieces, etc.</html> | | LABEL | SPAN=TRUE",
+    "Misc0 | " + Misc0 + " | Misc Vars | PROPS",
+    "help | <html><a href=http://forums.rptools.net/viewtopic.php?p=174984#p174984>See this post for more information about Misc Variables</a></html>| | LABEL | SPAN=TRUE",
+	"cond1 | Conditional Bonus 1 || TAB",
+	"cond1name  | "+json.get(conditional1,"Name")+"  | Displayname | TEXT",
+	"cond1affects |  Nothing, Replaces Critical Damage Bonus, Add to Attack, Add to Damagerolls, Replace Damage Dice ([W]), Change Keywords, Extra Damage (applies even to non-damagerolls), Replace Critical Die, Add to Damage Dice Count, Add Custom Row | Affects | LIST | SELECT="+json.get(conditional1,"Affects"),
+	"cond1from | Keywords only , vs. Defense & Keywords, used Ability & Keywords, Attack Type & Keywords, Combat Advantage & Keywords, Attack Roll & Keywords, Target State & Keywords, My State & Keywords, No Damage Keywords & other Keywords, Expression & Keywords | Condition | LIST | SELECT="+json.get(conditional1,"From"),
+	"cond1keyword | "+json.get(conditional1,"Keyword")+"  | Keyword(s) | TEXT",
+	"cond1keyword2 | "+json.get(conditional1,"Keyword2")+"  | or Keyword(s) | TEXT",
+	"cond1keyword3 | "+json.get(conditional1,"Keyword3")+"  | or Keyword(s) | TEXT",
+	"cond1defense | "+DEFENSE_NAMES+" | Defense | LIST | SELECT="+json.get(conditional1,"Defense"),
+	"cond1ability | "+ABILITY_BONUS_NAMES+" | Ability | LIST | SELECT="+json.get(conditional1,"Ability"),
+	"cond1type | "+ATTACK_TYPES+" | Attack Type | LIST | SELECT="+json.get(conditional1,"Type"),
+	"cond1roll | "+ATTACK_ROLLS+" | Attack Roll | LIST | SELECT="+json.get(conditional1,"Roll"),
+  	"cond1state | " + TOKEN_STATES + " | Token State | LIST | VALUE=STRING SELECT=" + listFind(TOKEN_STATES, translateState(json.get(conditional1, "State"))),
+	"cond1expression | "+json.get(conditional1,"Expression")+"  | Expression | TEXT",
+	"cond1reverse | " + json.get(conditional1,"Reverse") + " | Negate Condition? | CHECK",
+	"cond1value | "+json.get(conditional1,"Value")+" | Value or Keywords to add | TEXT | WIDTH=4",
+	"cond1max | "+json.get(conditional1,"Max")+" | Value (maximized) / remove KW | TEXT | WIDTH=4",
+	"help | Keywords are comma seperated and must all be there for the bonus to apply. | Note | LABEL",
+	"help | For example: 'Implement, Fire' only is applied on Fire and Implement attacks. | Note | LABEL",
+	"help | If the bonus should be applied to either Implement or Fire attacks, use the additional Keyword field. | Note | LABEL",
+	"help | if no keywords are specified in the first field, keywords are not checked. Other empty keyword fields are ignored | Note | LABEL",
+	"help | The maximized value is only used for added damage and replaced damage dice | Note | LABEL",
+	"help | To Negate the condition (not the keywords) check the Negate Conditon Checkmark. | Note | LABEL",
+	"help | Negated+Target state results will trigger when the target does not have that state for example | Note | LABEL",
+	"help | To Negate Keywords, put a ! in front of them: Implement, !Fire is all implement attacks that do not have the Fire keyword | Note | LABEL",
+	"help | Example: Some Common damage keywords the framework understands:"+DAMAGE_KEYWORDS+"| Note | LABEL",
+	"cond2 | Conditional Bonus 2 || TAB",
+	"cond2name  | "+json.get(conditional2,"Name")+"  | Displayname | TEXT",
+	"cond2affects |  Nothing, Replaces Critical Damage Bonus, Add to Attack, Add to Damagerolls, Replace Damage Dice ([W]), Change Keywords, Extra Damage (applies even to non-damagerolls), Replace Critical Die, Add to Damage Dice Count, Add Custom Row | Affects | LIST | SELECT="+json.get(conditional2,"Affects"),
+	"cond2from | Keywords only , vs. Defense & Keywords, used Ability & Keywords, Attack Type & Keywords, Combat Advantage & Keywords, Attack Roll & Keywords, Target State & Keywords, My State & Keywords, No Damage Keywords & other Keywords, Expression & Keywords | Condition | LIST | SELECT="+json.get(conditional2,"From"),
+	"cond2keyword | "+json.get(conditional2,"Keyword")+"  | Keyword(s) | TEXT",
+	"cond2keyword2 | "+json.get(conditional2,"Keyword2")+"  | or Keyword(s) | TEXT",
+	"cond2keyword3 | "+json.get(conditional2,"Keyword3")+"  | or Keyword(s) | TEXT",
+	"cond2defense | "+DEFENSE_NAMES+" | Defense | LIST | SELECT="+json.get(conditional2,"Defense"),
+	"cond2ability | "+ABILITY_BONUS_NAMES+" | Ability | LIST | SELECT="+json.get(conditional2,"Ability"),
+	"cond2type | "+ATTACK_TYPES+" | Attack Type | LIST | SELECT="+json.get(conditional2,"Type"),
+	"cond2roll | "+ATTACK_ROLLS+" | Attack Roll | LIST | SELECT="+json.get(conditional2,"Roll"),
+ 	"cond2state | " + TOKEN_STATES + " | Token State | LIST | VALUE=STRING SELECT=" + listFind(TOKEN_STATES, translateState(json.get(conditional2, "State"))),
+	"cond2expression | "+json.get(conditional2,"Expression")+"  | Expression | TEXT",
+	"cond2reverse | " + json.get(conditional2,"Reverse") + " | Negate Condition? | CHECK",
+	"cond2value | "+json.get(conditional2,"Value")+" | Value or Keywords to add | TEXT | WIDTH=4",
+	"cond2max | "+json.get(conditional2,"Max")+" | Value (maximized) / remove KW | TEXT | WIDTH=4",
+	"cond3 | Conditional Bonus 3 || TAB",
+	"cond3name  | "+json.get(conditional3,"Name")+"  | Displayname | TEXT",
+	"cond3affects |  Nothing, Replaces Critical Damage Bonus, Add to Attack, Add to Damagerolls, Replace Damage Dice ([W]), Change Keywords, Extra Damage (applies even to non-damagerolls), Replace Critical Die, Add to Damage Dice Count, Add Custom Row | Affects | LIST | SELECT="+json.get(conditional3,"Affects"),
+	"cond3from | Keywords only , vs. Defense & Keywords, used Ability & Keywords, Attack Type & Keywords, Combat Advantage & Keywords, Attack Roll & Keywords, Target State & Keywords, My State & Keywords, No Damage Keywords & other Keywords, Expression & Keywords | Condition | LIST | SELECT="+json.get(conditional3,"From"),
+	"cond3keyword | "+json.get(conditional3,"Keyword")+"  | Keyword(s) | TEXT",
+	"cond3keyword2 | "+json.get(conditional3,"Keyword2")+"  | or Keyword(s) | TEXT",
+	"cond3keyword3 | "+json.get(conditional3,"Keyword3")+"  | or Keyword(s) | TEXT",
+	"cond3defense | "+DEFENSE_NAMES+" | Defense | LIST | SELECT="+json.get(conditional3,"Defense"),
+	"cond3ability | "+ABILITY_BONUS_NAMES+" | Ability | LIST | SELECT="+json.get(conditional3,"Ability"),
+	"cond3type | "+ATTACK_TYPES+" | Attack Type | LIST | SELECT="+json.get(conditional3,"Type"),
+	"cond3roll | "+ATTACK_ROLLS+" | Attack Roll | LIST | SELECT="+json.get(conditional3,"Roll"),
+ 	"cond3state | " + TOKEN_STATES + " | Token State | LIST | VALUE=STRING SELECT=" + listFind(TOKEN_STATES, translateState(json.get(conditional3, "State"))),
+	"cond3expression | "+json.get(conditional3,"Expression")+"  | Expression | TEXT",
+	"cond3reverse | " + json.get(conditional3,"Reverse") + " | Negate Condition? | CHECK",
+	"cond3value | "+json.get(conditional3,"Value")+" | Value or Keywords to add | TEXT | WIDTH=4",
+	"cond3max | "+json.get(conditional3,"Max")+" | Value (maximized) / remove KW | TEXT | WIDTH=4",
+	"cond4 | Conditional Bonus 4 || TAB",
+	"cond4name  | "+json.get(conditional4,"Name")+"  | Displayname | TEXT",
+	"cond4affects | Nothing, Replaces Critical Damage Bonus, Add to Attack, Add to Damagerolls, Replace Damage Dice ([W]), Change Keywords, Extra Damage (applies even to non-damagerolls), Replace Critical Die, Add to Damage Dice Count, Add Custom Row | Affects | LIST | SELECT="+json.get(conditional4,"Affects"),
+	"cond4from | Keywords only , vs. Defense & Keywords, used Ability & Keywords, Attack Type & Keywords, Combat Advantage & Keywords, Attack Roll & Keywords, Target State & Keywords, My State & Keywords, No Damage Keywords & other Keywords, Expression & Keywords | Condition | LIST | SELECT="+json.get(conditional4,"From"),
+	"cond4keyword | "+json.get(conditional4,"Keyword")+"  | Keyword(s) | TEXT",
+	"cond4keyword2 | "+json.get(conditional4,"Keyword2")+"  | or Keyword(s) | TEXT",
+	"cond4keyword3 | "+json.get(conditional4,"Keyword3")+"  | or Keyword(s) | TEXT",
+	"cond4defense | "+DEFENSE_NAMES+" | Defense | LIST | SELECT="+json.get(conditional4,"Defense"),
+	"cond4ability | "+ABILITY_BONUS_NAMES+" | Ability | LIST | SELECT="+json.get(conditional4,"Ability"),
+	"cond4type | "+ATTACK_TYPES+" | Attack Type | LIST | SELECT="+json.get(conditional4,"Type"),
+	"cond4roll | "+ATTACK_ROLLS+" | Attack Roll | LIST | SELECT="+json.get(conditional4,"Roll"),
+ 	"cond4state | " + TOKEN_STATES + " | Token State | LIST | VALUE=STRING SELECT=" + listFind(TOKEN_STATES, translateState(json.get(conditional4, "State"))),
+	"cond4expression | "+json.get(conditional4,"Expression")+"  | Expression | TEXT",
+	"cond4reverse | " + json.get(conditional4,"Reverse") + " | Negate Condition? | CHECK",
+	"cond4value | "+json.get(conditional4,"Value")+" | Value or Keywords to add | TEXT | WIDTH=4",
+	"cond4max | "+json.get(conditional4,"Max")+" | Value (maximized) / remove KW | TEXT | WIDTH=4",
+	"cond5 | Conditional Bonus 5 || TAB",
+	"cond5name  | "+json.get(conditional5,"Name")+"  | Displayname | TEXT",
+	"cond5affects |  Nothing, Replaces Critical Damage Bonus, Add to Attack, Add to Damagerolls, Replace Damage Dice ([W]), Change Keywords, Extra Damage (applies even to non-damagerolls), Replace Critical Die, Add to Damage Dice Count, Add Custom Row | Affects | LIST | SELECT="+json.get(conditional5,"Affects"),
+	"cond5from | Keywords only , vs. Defense & Keywords, used Ability & Keywords, Attack Type & Keywords, Combat Advantage & Keywords, Attack Roll & Keywords, Target State & Keywords, My State & Keywords, No Damage Keywords & other Keywords, Expression & Keywords | Condition | LIST | SELECT="+json.get(conditional5,"From"),
+	"cond5keyword | "+json.get(conditional5,"Keyword")+"  | Keyword(s) | TEXT",
+	"cond5keyword2 | "+json.get(conditional5,"Keyword2")+"  | or Keyword(s) | TEXT",
+	"cond5keyword3 | "+json.get(conditional5,"Keyword3")+"  | or Keyword(s) | TEXT",
+	"cond5defense | "+DEFENSE_NAMES+" | Defense | LIST | SELECT="+json.get(conditional5,"Defense"),
+	"cond5ability | "+ABILITY_BONUS_NAMES+" | Ability | LIST | SELECT="+json.get(conditional5,"Ability"),
+	"cond5type | "+ATTACK_TYPES+" | Attack Type | LIST | SELECT="+json.get(conditional5,"Type"),
+	"cond5roll | "+ATTACK_ROLLS+" | Attack Roll | LIST | SELECT="+json.get(conditional5,"Roll"),
+ 	"cond5state | " + TOKEN_STATES + " | Token State | LIST | VALUE=STRING SELECT=" + listFind(TOKEN_STATES, translateState(json.get(conditional5, "State"))),
+	"cond5expression | "+json.get(conditional5,"Expression")+"  | Expression | TEXT",
+	"cond5reverse | " + json.get(conditional5,"Reverse") + " | Negate Condition? | CHECK",
+	"cond5value | "+json.get(conditional5,"Value")+" | Value or Keywords to add | TEXT | WIDTH=4",
+	"cond5max | "+json.get(conditional5,"Max")+" | Value (maximized) / remove KW | TEXT | WIDTH=4",
+	"cond6 | Conditional Bonus 6 || TAB",
+	"cond6name  | "+json.get(conditional6,"Name")+"  | Displayname | TEXT",
+	"cond6affects |  Nothing, Replaces Critical Damage Bonus, Add to Attack, Add to Damagerolls, Replace Damage Dice ([W]), Change Keywords, Extra Damage (applies even to non-damagerolls), Replace Critical Die, Add to Damage Dice Count, Add Custom Row | Affects | LIST | SELECT="+json.get(conditional6,"Affects"),
+	"cond6from | Keywords only , vs. Defense & Keywords, used Ability & Keywords, Attack Type & Keywords, Combat Advantage & Keywords, Attack Roll & Keywords, Target State & Keywords, My State & Keywords, No Damage Keywords & other Keywords, Expression & Keywords | Condition | LIST | SELECT="+json.get(conditional6,"From"),
+	"cond6keyword | "+json.get(conditional6,"Keyword")+"  | Keyword(s) | TEXT",
+	"cond6keyword2 | "+json.get(conditional6,"Keyword2")+"  | or Keyword(s) | TEXT",
+	"cond6keyword3 | "+json.get(conditional6,"Keyword3")+"  | or Keyword(s) | TEXT",
+	"cond6defense | "+DEFENSE_NAMES+" | Defense | LIST | SELECT="+json.get(conditional6,"Defense"),
+	"cond6ability | "+ABILITY_BONUS_NAMES+" | Ability | LIST | SELECT="+json.get(conditional6,"Ability"),
+	"cond6type | "+ATTACK_TYPES+" | Attack Type | LIST | SELECT="+json.get(conditional6,"Type"),
+	"cond6roll | "+ATTACK_ROLLS+" | Attack Roll | LIST | SELECT="+json.get(conditional6,"Roll"),
+  	"cond6state | " + TOKEN_STATES + " | Token State | LIST | VALUE=STRING SELECT=" + listFind(TOKEN_STATES, translateState(json.get(conditional6, "State"))),
+	"cond6expression | "+json.get(conditional6,"Expression")+"  | Expression | TEXT",
+	"cond6reverse | " + json.get(conditional6,"Reverse") + " | Negate Condition? | CHECK",
+	"cond6value | "+json.get(conditional6,"Value")+" | Value or Keywords to add | TEXT | WIDTH=4",
+	"cond6max | "+json.get(conditional6,"Max")+" | Value (maximized) / remove KW | TEXT | WIDTH=4",
+	"cond7 | Conditional Bonus 7 || TAB",
+	"cond7name  | "+json.get(conditional7,"Name")+"  | Displayname | TEXT",
+	"cond7affects |  Nothing, Replaces Critical Damage Bonus, Add to Attack, Add to Damagerolls, Replace Damage Dice ([W]), Change Keywords, Extra Damage (applies even to non-damagerolls), Replace Critical Die, Add to Damage Dice Count, Add Custom Row | Affects | LIST | SELECT="+json.get(conditional7,"Affects"),
+	"cond7from | Keywords only , vs. Defense & Keywords, used Ability & Keywords, Attack Type & Keywords, Combat Advantage & Keywords, Attack Roll & Keywords, Target State & Keywords, My State & Keywords, No Damage Keywords & other Keywords, Expression & Keywords | Condition | LIST | SELECT="+json.get(conditional7,"From"),
+	"cond7keyword | "+json.get(conditional7,"Keyword")+"  | Keyword(s) | TEXT",
+	"cond7keyword2 | "+json.get(conditional7,"Keyword2")+"  | or Keyword(s) | TEXT",
+	"cond7keyword3 | "+json.get(conditional7,"Keyword3")+"  | or Keyword(s) | TEXT",
+	"cond7defense | "+DEFENSE_NAMES+" | Defense | LIST | SELECT="+json.get(conditional7,"Defense"),
+	"cond7ability | "+ABILITY_BONUS_NAMES+" | Ability | LIST | SELECT="+json.get(conditional7,"Ability"),
+	"cond7type | "+ATTACK_TYPES+" | Attack Type | LIST | SELECT="+json.get(conditional7,"Type"),
+	"cond7roll | "+ATTACK_ROLLS+" | Attack Roll | LIST | SELECT="+json.get(conditional7,"Roll"),
+ 	"cond7state | " + TOKEN_STATES + " | Token State | LIST | VALUE=STRING SELECT=" + listFind(TOKEN_STATES, translateState(json.get(conditional7, "State"))),
+	"cond7expression | "+json.get(conditional7,"Expression")+"  | Expression | TEXT",
+	"cond7reverse | " + json.get(conditional7,"Reverse") + " | Negate Condition? | CHECK",
+	"cond7value | "+json.get(conditional7,"Value")+" | Value or Keywords to add | TEXT | WIDTH=4",
+	"cond7max | "+json.get(conditional7,"Max")+" | Value (maximized) / remove KW | TEXT | WIDTH=4",
+	"cond8 | Conditional Bonus 8 || TAB",
+	"cond8name  | "+json.get(conditional8,"Name")+"  | Displayname | TEXT",
+	"cond8affects | Nothing, Replaces Critical Damage Bonus, Add to Attack, Add to Damagerolls, Replace Damage Dice ([W]), Change Keywords, Extra Damage (applies even to non-damagerolls), Replace Critical Die, Add to Damage Dice Count, Add Custom Row | Affects | LIST | SELECT="+json.get(conditional8,"Affects"),
+	"cond8from | Keywords only , vs. Defense & Keywords, used Ability & Keywords, Attack Type & Keywords, Combat Advantage & Keywords, Attack Roll & Keywords, Target State & Keywords, My State & Keywords, No Damage Keywords & other Keywords, Expression & Keywords | Condition | LIST | SELECT="+json.get(conditional8,"From"),
+	"cond8keyword | "+json.get(conditional8,"Keyword")+"  | Keyword(s) | TEXT",
+	"cond8keyword2 | "+json.get(conditional8,"Keyword2")+"  | or Keyword(s) | TEXT",
+	"cond8keyword3 | "+json.get(conditional8,"Keyword3")+"  | or Keyword(s) | TEXT",
+	"cond8defense | "+DEFENSE_NAMES+" | Defense | LIST | SELECT="+json.get(conditional8,"Defense"),
+	"cond8ability | "+ABILITY_BONUS_NAMES+" | Ability | LIST | SELECT="+json.get(conditional8,"Ability"),
+	"cond8type | "+ATTACK_TYPES+" | Attack Type | LIST | SELECT="+json.get(conditional8,"Type"),
+	"cond8roll | "+ATTACK_ROLLS+" | Attack Roll | LIST | SELECT="+json.get(conditional8,"Roll"),
+ 	"cond8state | " + TOKEN_STATES + " | Token State | LIST | VALUE=STRING SELECT=" + listFind(TOKEN_STATES, translateState(json.get(conditional8, "State"))),
+	"cond8expression | "+json.get(conditional8,"Expression")+"  | Expression | TEXT",
+	"cond8reverse | " + json.get(conditional8,"Reverse") + " | Negate Condition? | CHECK",
+	"cond8value | "+json.get(conditional8,"Value")+" | Value or Keywords to add | TEXT | WIDTH=4",
+	"cond8max | "+json.get(conditional8,"Max")+" | Value (maximized) / remove KW | TEXT | WIDTH=4",
+	"cond9 | Conditional Bonus 9 || TAB",
+	"cond9name  | "+json.get(conditional9,"Name")+"  | Displayname | TEXT",
+	"cond9affects | Nothing, Replaces Critical Damage Bonus, Add to Attack, Add to Damagerolls, Replace Damage Dice ([W]), Change Keywords, Extra Damage (applies even to non-damagerolls), Replace Critical Die, Add to Damage Dice Count, Add Custom Row | Affects | LIST | SELECT="+json.get(conditional9,"Affects"),
+	"cond9from | Keywords only , vs. Defense & Keywords, used Ability & Keywords, Attack Type & Keywords, Combat Advantage & Keywords, Attack Roll & Keywords, Target State & Keywords, My State & Keywords, No Damage Keywords & other Keywords, Expression & Keywords | Condition | LIST | SELECT="+json.get(conditional9,"From"),
+	"cond9keyword | "+json.get(conditional9,"Keyword")+"  | Keyword(s) | TEXT",
+	"cond9keyword2 | "+json.get(conditional9,"Keyword2")+"  | or Keyword(s) | TEXT",
+	"cond9keyword3 | "+json.get(conditional9,"Keyword3")+"  | or Keyword(s) | TEXT",
+	"cond9defense | "+DEFENSE_NAMES+" | Defense | LIST | SELECT="+json.get(conditional9,"Defense"),
+	"cond9ability | "+ABILITY_BONUS_NAMES+" | Ability | LIST | SELECT="+json.get(conditional9,"Ability"),
+	"cond9type | "+ATTACK_TYPES+" | Attack Type | LIST | SELECT="+json.get(conditional9,"Type"),
+	"cond9roll | "+ATTACK_ROLLS+" | Attack Roll | LIST | SELECT="+json.get(conditional9,"Roll"),
+ 	"cond9state | " + TOKEN_STATES + " | Token State | LIST | VALUE=STRING SELECT=" + listFind(TOKEN_STATES, translateState(json.get(conditional9, "State"))),
+	"cond9expression | "+json.get(conditional9,"Expression")+"  | Expression | TEXT",
+	"cond9reverse | " + json.get(conditional9,"Reverse") + " | Negate Condition? | CHECK",
+	"cond9value | "+json.get(conditional9,"Value")+" | Value or Keywords to add | TEXT | WIDTH=4",
+	"cond9max | "+json.get(conditional9,"Max")+" | Value (maximized) / remove KW | TEXT | WIDTH=4",
+	"cond10 | Conditional Bonus 10 || TAB",
+	"cond10name  | "+json.get(conditional10,"Name")+"  | Displayname | TEXT",
+	"cond10affects | Nothing, Replaces Critical Damage Bonus, Add to Attack, Add to Damagerolls, Replace Damage Dice ([W]), Change Keywords, Extra Damage (applies even to non-damagerolls), Replace Critical Die, Add to Damage Dice Count, Add Custom Row | Affects | LIST | SELECT="+json.get(conditional10,"Affects"),
+	"cond10from | Keywords only , vs. Defense & Keywords, used Ability & Keywords, Attack Type & Keywords, Combat Advantage & Keywords, Attack Roll & Keywords, Target State & Keywords, My State & Keywords, No Damage Keywords & other Keywords, Expression & Keywords | Condition | LIST | SELECT="+json.get(conditional10,"From"),
+	"cond10keyword | "+json.get(conditional10,"Keyword")+"  | Keyword(s) | TEXT",
+	"cond10keyword2 | "+json.get(conditional10,"Keyword2")+"  | or Keyword(s) | TEXT",
+	"cond10keyword3 | "+json.get(conditional10,"Keyword3")+"  | or Keyword(s) | TEXT",
+	"cond10defense | "+DEFENSE_NAMES+" | Defense | LIST | SELECT="+json.get(conditional10,"Defense"),
+	"cond10ability | "+ABILITY_BONUS_NAMES+" | Ability | LIST | SELECT="+json.get(conditional10,"Ability"),
+	"cond10type | "+ATTACK_TYPES+" | Attack Type | LIST | SELECT="+json.get(conditional10,"Type"),
+	"cond10roll | "+ATTACK_ROLLS+" | Attack Roll | LIST | SELECT="+json.get(conditional10,"Roll"),
+ 	"cond10state | " + TOKEN_STATES + " | Token State | LIST | VALUE=STRING SELECT=" + listFind(TOKEN_STATES, translateState(json.get(conditional10, "State"))),
+	"cond10expression | "+json.get(conditional10,"Expression")+"  | Expression | TEXT",
+	"cond10reverse | " + json.get(conditional10,"Reverse") + " | Negate Condition? | CHECK",
+	"cond10value | "+json.get(conditional10,"Value")+" | Value or Keywords to add | TEXT | WIDTH=4",
+	"cond10max | "+json.get(conditional10,"Max")+" | Value (maximized) / remove KW | TEXT | WIDTH=4"
+
+)]
+[H: abort(status)]
+[H, COUNT(10), CODE: {
+	[H: i = roll.count + 1]
+	[H: CustomRestCode=json.set(CustomRestCode,"Conditional"+i, json.set("{}",
+		"Name",eval("cond"+i+"name"),
+		"Affects",eval("cond"+i+"affects"),
+		"From",eval("cond"+i+"from"),
+		"Keyword",eval("cond"+i+"keyword"),
+		"Keyword2",eval("cond"+i+"keyword2"),
+		"Keyword3",eval("cond"+i+"keyword3"),
+		"Defense",eval("cond"+i+"defense"),
+		"Ability",eval("cond"+i+"ability"),
+		"Type",eval("cond"+i+"type"),
+		"Roll",eval("cond"+i+"roll"),
+		"State",eval("cond"+i+"state"),
+		"Expression",eval("cond"+i+"expression"),
+		"Reverse",eval("cond"+i+"reverse"),
+		"Value",eval("cond"+i+"value"),
+		"Max",eval("cond"+i+"max")
+	))]
+	
+}]
+[H: Misc1 = "{" + getStrProp(Misc0, "Misc1") + "}"]
+[H: Misc2 = "{" + getStrProp(Misc0, "Misc2") + "}"]
+[H: Misc3 = "{" + getStrProp(Misc0, "Misc3") + "}"]
+[H: Misc4 = "{" + getStrProp(Misc0, "Misc4") + "}"]
+[H: Misc5 = "{" + getStrProp(Misc0, "Misc5") + "}"]
+[H: Misc6 = "{" + getStrProp(Misc0, "Misc6") + "}"]
+[H: Misc7 = "{" + getStrProp(Misc0, "Misc7") + "}"]
+[H: Misc8 = "{" + getStrProp(Misc0, "Misc8") + "}"]
+[H: Misc9 = "{" + getStrProp(Misc0, "Misc9") + "}"]

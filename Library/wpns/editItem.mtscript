@@ -1,0 +1,201 @@
+<!-- Veggiesama's editItem macro, MapTool B54 -->
+[MACRO("pmSetupVars@Lib:Veg"):""]
+[H: varsFromStrProp(macro.return)]
+[MACRO("pmSetupStates@Lib:Veg"):""]
+[H: varsFromStrProp(macro.return)]
+<!-- macro.args will be the name of a weapon, the string "newWeapon", or the string "newImplement" -->
+[H: weaponName = macro.args]
+[H: weapon = ""]
+[H: weapon = if(weaponName=="newWeapon",    getLibProperty("DEFAULT_WEAPON",    "Lib:Veg"), weapon)]
+[H: weapon = if(weaponName=="newImplement", getLibProperty("DEFAULT_IMPLEMENT", "Lib:Veg"), weapon)]
+[H, IF(json.isEmpty(weapon)): weapon = json.get(WeaponLibrary, weaponName)]
+
+<!-- Determine the stats of the item -->
+[H: name = json.get(weapon, "Name")]
+[H: description = json.get(weapon, "Description")]
+[H: dmgDice = json.get(weapon, "DmgDice")]
+[H: critDice = json.get(weapon, "CritDice")]
+[H: dmgDiceMax = json.get(weapon, "DmgDiceMax")]
+[H: dmgDiceBonus = json.get(weapon, "DmgDiceBonus")]
+[H: dmgTypeOnCrit = json.get(weapon, "DmgTypeOnCrit")]
+[H: critThreshold = json.get(weapon, "CritThreshold")]
+[H: enhance = json.get(weapon, "Enhance")]
+[H: prof = json.get(weapon, "Prof")]
+[H: atk = json.get(weapon, "Atk")]
+[H: atk_f = json.get(weapon, "AtkFeat")]
+[H: dmg = json.get(weapon, "Dmg")]
+[H: range = json.get(weapon, "Range")]
+[H: attackCode = json.get(weapon, "AttackCode")]
+[H: rollCode = json.get(weapon, "RollCode")]
+[H: equipCode = json.get(weapon, "EquipCode")]
+[H: unequipCode = json.get(weapon, "UnequipCode")]
+[h:conditional1 = json.get(weapon, "Conditional1")]
+[H, IF(json.isEmpty(conditional1)): conditional1="{}"]
+[H: conditional2 = json.get(weapon, "Conditional2")]
+[H, IF(json.isEmpty(conditional2)): conditional2="{}"]
+[H: conditional3 = json.get(weapon, "Conditional3")]
+[H, IF(json.isEmpty(conditional3)): conditional3="{}"]
+[H: conditional4 = json.get(weapon, "Conditional4")]
+[H, IF(json.isEmpty(conditional4)): conditional4="{}"]
+[H: conditional5 = json.get(weapon, "Conditional5")]
+[H, IF(json.isEmpty(conditional5)): conditional5="{}"]
+
+<!-- show the display -->
+[H: status = input(
+	"tab0 | General || TAB",
+	"name | " + name + " | Weapon's nickname / short name | TEXT | WIDTH=25",
+	"description | " + description + " | Weapon's description / long name | TEXT | WIDTH=25",
+	"dmgDice | " + dmgDice + " | Damage Dice ([W]) | TEXT | WIDTH=4",
+	"dmgDiceMax | " + dmgDiceMax + " | Damage Dice ([W]), Maximized (on Crit) | TEXT | WIDTH=4",
+	"critDice | Only Damage Bonus (on Crit), d1, d2, d3, d4, d5, d6, d7, d8, d9, d10, d11, d12, d13, d14, d15, d16, d17, d18, d19, d20 | Crit Dice | LIST | SELECT="+critDice,
+	"dmgDiceBonus | " + dmgDiceBonus + " | Damage Bonus (on Crit) | TEXT | WIDTH=4",
+	"dmgTypeOnCrit | " + dmgTypeOnCrit + " | Damage Type (on Crit) | TEXT | WIDTH=10",
+	"critThreshold | " + critThreshold + " | Critical hit threshold | TEXT | WIDTH=4",
+	"enhance | Mundane, 1, 2, 3, 4, 5, 6, 7 | Bonus, Enhancement (attack/damage roll only) | LIST | SELECT="+enhance,
+	"prof | " + prof + " | Bonus, Proficiency | TEXT | WIDTH=4",
+	"atk | " + atk + " | Bonus, Attack (Misc) | TEXT | WIDTH=4",
+	"atk_f | " + atk_f + " | Bonus, Attack (Feat) | TEXT | WIDTH=4",
+	"dmg | " + dmg + " | Bonus, Damage (Misc) (damage roll only) | TEXT | WIDTH=4",
+	"range | " + range + " | Range | TEXT | WIDTH=4",
+	"attackCode | " + attackCode + " | Custom Code for each Attack | TEXT | WIDTH=25",
+	"rollCode | " + rollCode + " | Custom Code for each AttackRoll | TEXT | WIDTH=25",
+	"equipCode | " + equipCode + " | Custom Code for equipping | TEXT | WIDTH=25",
+	"unequipCode | " + unequipCode + " | Custom Code for unequipping | TEXT | WIDTH=25",
+	"help | A few examples | Note | LABEL",
+	"help | <html><pre><b>Arrowcounter</b> Misc3 holds amount of Arrows<br> <i>Custom Code for each AttackRoll:</i> [r:setMiscVar(3,Misc3-1)] arrows left in quiver<br><b>Dynamic Shield Bonus</b> Heavy Shield (+2 to AC/Reflex)<br><i>Custom Code for equipping:</i> Shield Bonus is: +[t:ShieldBonus=2]<br><i>Custom Code for unequipping:</i> Shield Bonus is: +[t:ShieldBonus=0]<br><b>Dual Implement Spellcaster</b> Value stored in Misc4<br><i>Custom Code for equipping: </i>Offhand Implement Bonus is: +[t:setMiscVar(4,3)]<br><i>Custom Code for unequipping: </i>Offhand Implement Bonus is: +[t:setMiscVar(4,0)]<br>Then add Misc4 as Bonus to Damage Rolls and Bonus to Damage Rolls (maximized) in the character sheet for powers with the implement keyword</pre></html> | | LABEL | SPAN=TRUE",
+	"cond1 | Conditional Bonus 1 || TAB",
+	"cond1name  | "+json.get(conditional1,"Name")+"  | Displayname | TEXT",
+	"cond1affects | Nothing, Replaces Critical Damage Bonus, Add to Attack, Add to Damagerolls, Replace Damage Dice ([W]), Change Keywords, Extra Damage (applies even to non-damagerolls), Replace Critical Die, Add to Damage Dice Count, Add Custom Row  | Affects | LIST | SELECT="+json.get(conditional1,"Affects"),
+	"cond1from | Keywords only , vs. Defense & Keywords, used Ability & Keywords, Attack Type & Keywords, Combat Advantage & Keywords, Attack Roll & Keywords, Target State & Keywords, My State & Keywords, No Damage Keywords & other Keywords, Expression & Keywords | Condition | LIST | SELECT="+json.get(conditional1,"From"),
+	"cond1keyword | "+json.get(conditional1,"Keyword")+"  | Keyword(s) | TEXT",
+	"cond1keyword2 | "+json.get(conditional1,"Keyword2")+"  | or Keyword(s) | TEXT",
+	"cond1keyword3 | "+json.get(conditional1,"Keyword3")+"  | or Keyword(s) | TEXT",
+	"cond1defense | "+DEFENSE_NAMES+" | Defense | LIST | SELECT="+json.get(conditional1,"Defense"),
+	"cond1ability | "+ABILITY_BONUS_NAMES+" | Ability | LIST | SELECT="+json.get(conditional1,"Ability"),
+	"cond1type | "+ATTACK_TYPES+" | Attack Type | LIST | SELECT="+json.get(conditional1,"Type"),
+	"cond1roll | "+ATTACK_ROLLS+" | Attack Roll | LIST | SELECT="+json.get(conditional1,"Roll"),
+  	"cond1state | " + TOKEN_STATES + " | Token State | LIST | VALUE=STRING SELECT=" + listFind(TOKEN_STATES, translateState(json.get(conditional1, "State"))),
+	"cond1expression | "+json.get(conditional1,"Expression")+"  | Expression | TEXT",
+	"cond1reverse | " + json.get(conditional1,"Reverse") + " | Negate Condition? | CHECK",
+	"cond1value | "+json.get(conditional1,"Value")+" | Value or Keywords to add | TEXT | WIDTH=4",
+	"cond1max | "+json.get(conditional1,"Max")+" | Value (maximized) / remove KW | TEXT | WIDTH=4",
+	"help | Keywords are comma seperated and must all be there for the bonus to apply. | Note | LABEL",
+	"help | For example: 'Implement, Fire' only is applied on Fire and Implement attacks. | Note | LABEL",
+	"help | If the bonus should be applied to either Implement or Fire attacks, use the additional Keyword field. | Note | LABEL",
+	"help | if no keywords are specified in the first field, keywords are not checked. Other empty keyword fields are ignored | Note | LABEL",
+	"help | The maximized value is only used for added damage and replaced damage dice | Note | LABEL",
+	"help | To Negate the condition (not the keywords) check the Negate Conditon Checkmark. | Note | LABEL",
+	"help | Negated+Target state results will trigger when the target does not have that state for example | Note | LABEL",
+	"help | To Negate Keywords, put a ! in front of them: Implement, !Fire is all implement attacks that do not have the Fire keyword | Note | LABEL",
+	"help | Example: Some Common damage keywords the framework understands:"+DAMAGE_KEYWORDS+"| Note | LABEL",
+	"cond2 | Conditional Bonus 2 || TAB",
+	"cond2name  | "+json.get(conditional2,"Name")+"  | Displayname | TEXT",
+	"cond2affects |  Nothing, Replaces Critical Damage Bonus, Add to Attack, Add to Damagerolls, Replace Damage Dice ([W]), Change Keywords, Extra Damage (applies even to non-damagerolls), Replace Critical Die, Add to Damage Dice Count, Add Custom Row | Affects | LIST | SELECT="+json.get(conditional2,"Affects"),
+	"cond2from | Keywords only , vs. Defense & Keywords, used Ability & Keywords, Attack Type & Keywords, Combat Advantage & Keywords, Attack Roll & Keywords, Target State & Keywords, My State & Keywords, No Damage Keywords & other Keywords, Expression & Keywords | Condition | LIST | SELECT="+json.get(conditional2,"From"),
+	"cond2keyword | "+json.get(conditional2,"Keyword")+"  | Keyword(s) | TEXT",
+	"cond2keyword2 | "+json.get(conditional2,"Keyword2")+"  | or Keyword(s) | TEXT",
+	"cond2keyword3 | "+json.get(conditional2,"Keyword3")+"  | or Keyword(s) | TEXT",
+	"cond2defense | "+DEFENSE_NAMES+" | Defense | LIST | SELECT="+json.get(conditional2,"Defense"),
+	"cond2ability | "+ABILITY_BONUS_NAMES+" | Ability | LIST | SELECT="+json.get(conditional2,"Ability"),
+	"cond2type | "+ATTACK_TYPES+" | Attack Type | LIST | SELECT="+json.get(conditional2,"Type"),
+	"cond2roll | "+ATTACK_ROLLS+" | Attack Roll | LIST | SELECT="+json.get(conditional2,"Roll"),
+ 	"cond2state | " + TOKEN_STATES + " | Token State | LIST | VALUE=STRING SELECT=" + listFind(TOKEN_STATES, translateState(json.get(conditional2, "State"))),
+	"cond2expression | "+json.get(conditional2,"Expression")+"  | Expression | TEXT",
+	"cond2reverse | " + json.get(conditional2,"Reverse") + " | Negate Condition? | CHECK",
+	"cond2value | "+json.get(conditional2,"Value")+" | Value or Keywords to add | TEXT | WIDTH=4",
+	"cond2max | "+json.get(conditional2,"Max")+" | Value (maximized) / remove KW | TEXT | WIDTH=4",
+	"cond3 | Conditional Bonus 3 || TAB",
+	"cond3name  | "+json.get(conditional3,"Name")+"  | Displayname | TEXT",
+	"cond3affects |  Nothing, Replaces Critical Damage Bonus, Add to Attack, Add to Damagerolls, Replace Damage Dice ([W]), Change Keywords, Extra Damage (applies even to non-damagerolls), Replace Critical Die, Add to Damage Dice Count, Add Custom Row | Affects | LIST | SELECT="+json.get(conditional3,"Affects"),
+	"cond3from | Keywords only , vs. Defense & Keywords, used Ability & Keywords, Attack Type & Keywords, Combat Advantage & Keywords, Attack Roll & Keywords, Target State & Keywords, My State & Keywords, No Damage Keywords & other Keywords, Expression & Keywords | Condition | LIST | SELECT="+json.get(conditional3,"From"),
+	"cond3keyword | "+json.get(conditional3,"Keyword")+"  | Keyword(s) | TEXT",
+	"cond3keyword2 | "+json.get(conditional3,"Keyword2")+"  | or Keyword(s) | TEXT",
+	"cond3keyword3 | "+json.get(conditional3,"Keyword3")+"  | or Keyword(s) | TEXT",
+	"cond3defense | "+DEFENSE_NAMES+" | Defense | LIST | SELECT="+json.get(conditional3,"Defense"),
+	"cond3ability | "+ABILITY_BONUS_NAMES+" | Ability | LIST | SELECT="+json.get(conditional3,"Ability"),
+	"cond3type | "+ATTACK_TYPES+" | Attack Type | LIST | SELECT="+json.get(conditional3,"Type"),
+	"cond3roll | "+ATTACK_ROLLS+" | Attack Roll | LIST | SELECT="+json.get(conditional3,"Roll"),
+ 	"cond3state | " + TOKEN_STATES + " | Token State | LIST | VALUE=STRING SELECT=" + listFind(TOKEN_STATES, translateState(json.get(conditional3, "State"))),
+	"cond3expression | "+json.get(conditional3,"Expression")+"  | Expression | TEXT",
+	"cond3reverse | " + json.get(conditional3,"Reverse") + " | Negate Condition? | CHECK",
+	"cond3value | "+json.get(conditional3,"Value")+" | Value or Keywords to add | TEXT | WIDTH=4",
+	"cond3max | "+json.get(conditional3,"Max")+" | Value (maximized) / remove KW | TEXT | WIDTH=4",
+	"cond4 | Conditional Bonus 4 || TAB",
+	"cond4name  | "+json.get(conditional4,"Name")+"  | Displayname | TEXT",
+	"cond4affects | Nothing, Replaces Critical Damage Bonus, Add to Attack, Add to Damagerolls, Replace Damage Dice ([W]), Change Keywords, Extra Damage (applies even to non-damagerolls), Replace Critical Die, Add to Damage Dice Count, Add Custom Row | Affects | LIST | SELECT="+json.get(conditional4,"Affects"),
+	"cond4from | Keywords only , vs. Defense & Keywords, used Ability & Keywords, Attack Type & Keywords, Combat Advantage & Keywords, Attack Roll & Keywords, Target State & Keywords, My State & Keywords, No Damage Keywords & other Keywords, Expression & Keywords | Condition | LIST | SELECT="+json.get(conditional4,"From"),
+	"cond4keyword | "+json.get(conditional4,"Keyword")+"  | Keyword(s) | TEXT",
+	"cond4keyword2 | "+json.get(conditional4,"Keyword2")+"  | or Keyword(s) | TEXT",
+	"cond4keyword3 | "+json.get(conditional4,"Keyword3")+"  | or Keyword(s) | TEXT",
+	"cond4defense | "+DEFENSE_NAMES+" | Defense | LIST | SELECT="+json.get(conditional4,"Defense"),
+	"cond4ability | "+ABILITY_BONUS_NAMES+" | Ability | LIST | SELECT="+json.get(conditional4,"Ability"),
+	"cond4type | "+ATTACK_TYPES+" | Attack Type | LIST | SELECT="+json.get(conditional4,"Type"),
+	"cond4roll | "+ATTACK_ROLLS+" | Attack Roll | LIST | SELECT="+json.get(conditional4,"Roll"),
+ 	"cond4state | " + TOKEN_STATES + " | Token State | LIST | VALUE=STRING SELECT=" + listFind(TOKEN_STATES, translateState(json.get(conditional4, "State"))),
+	"cond4expression | "+json.get(conditional4,"Expression")+"  | Expression | TEXT",
+	"cond4reverse | " + json.get(conditional4,"Reverse") + " | Negate Condition? | CHECK",
+	"cond4value | "+json.get(conditional4,"Value")+" | Value or Keywords to add | TEXT | WIDTH=4",
+	"cond4max | "+json.get(conditional4,"Max")+" | Value (maximized) / remove KW | TEXT | WIDTH=4",
+	"cond5 | Conditional Bonus 5 || TAB",
+	"cond5name  | "+json.get(conditional5,"Name")+"  | Displayname | TEXT",
+	"cond5affects | Nothing, Replaces Critical Damage Bonus, Add to Attack, Add to Damagerolls, Replace Damage Dice ([W]), Change Keywords, Extra Damage (applies even to non-damagerolls), Replace Critical Die, Add to Damage Dice Count, Add Custom Row | Affects | LIST | SELECT="+json.get(conditional5,"Affects"),
+	"cond5from | Keywords only , vs. Defense & Keywords, used Ability & Keywords, Attack Type & Keywords, Combat Advantage & Keywords, Attack Roll & Keywords, Target State & Keywords, My State & Keywords, No Damage Keywords & other Keywords, Expression & Keywords | Condition | LIST | SELECT="+json.get(conditional5,"From"),
+	"cond5keyword | "+json.get(conditional5,"Keyword")+"  | Keyword(s) | TEXT",
+	"cond5keyword2 | "+json.get(conditional5,"Keyword2")+"  | or Keyword(s) | TEXT",
+	"cond5keyword3 | "+json.get(conditional5,"Keyword3")+"  | or Keyword(s) | TEXT",
+	"cond5defense | "+DEFENSE_NAMES+" | Defense | LIST | SELECT="+json.get(conditional5,"Defense"),
+	"cond5ability | "+ABILITY_BONUS_NAMES+" | Ability | LIST | SELECT="+json.get(conditional5,"Ability"),
+	"cond5type | "+ATTACK_TYPES+" | Attack Type | LIST | SELECT="+json.get(conditional5,"Type"),
+	"cond5roll | "+ATTACK_ROLLS+" | Attack Roll | LIST | SELECT="+json.get(conditional5,"Roll"),
+ 	"cond5state | " + TOKEN_STATES + " | Token State | LIST | VALUE=STRING SELECT=" + listFind(TOKEN_STATES, translateState(json.get(conditional5, "State"))),
+	"cond5expression | "+json.get(conditional5,"Expression")+"  | Expression | TEXT",
+	"cond5reverse | " + json.get(conditional5,"Reverse") + " | Negate Condition? | CHECK",
+	"cond5value | "+json.get(conditional5,"Value")+" | Value or Keywords to add | TEXT | WIDTH=4",
+	"cond5max | "+json.get(conditional5,"Max")+" | Value (maximized) / remove KW | TEXT | WIDTH=4"
+)] [H: abort(status)]
+<!-- save new information -->
+[H: weapon = json.set(weapon,
+  "Name", name,
+  "Description", description,
+  "DmgDice", dmgDice,
+  "DmgDiceMax", dmgDiceMax,
+  "DmgDiceBonus", dmgDiceBonus,
+  "CritThreshold", critThreshold,
+  "Enhance", enhance,
+  "CritDice", critDice,
+  "Prof", prof,
+  "Atk", atk,
+  "AtkFeat", atk_f,
+  "Dmg", dmg,
+  "Range", range,
+  "DmgTypeOnCrit", dmgTypeOnCrit,
+  "AttackCode", attackCode,
+  "RollCode", rollCode,
+  "EquipCode", equipCode,
+  "UnequipCode", unequipCode
+)]
+[H, COUNT(5), CODE: {
+	[H: i = roll.count + 1]
+	[H: weapon=json.set(weapon,"Conditional"+i, json.set("{}",
+		"Name",eval("cond"+i+"name"),
+		"Affects",eval("cond"+i+"affects"),
+		"From",eval("cond"+i+"from"),
+		"Keyword",eval("cond"+i+"keyword"),
+		"Keyword2",eval("cond"+i+"keyword2"),
+		"Keyword3",eval("cond"+i+"keyword3"),
+		"Defense",eval("cond"+i+"defense"),
+		"Ability",eval("cond"+i+"ability"),
+		"Type",eval("cond"+i+"type"),
+		"Roll",eval("cond"+i+"roll"),
+		"State",eval("cond"+i+"state"),
+		"Expression",eval("cond"+i+"expression"),
+		"Reverse",eval("cond"+i+"reverse"),
+		"Value",eval("cond"+i+"value"),
+		"Max",eval("cond"+i+"max")
+	))]
+	
+}]
+[H: WeaponLibrary = json.set(WeaponLibrary, name, weapon)]
+
+<!-- report to chat -->
+<font color=blue><b>Equipment:</b></font> Updated <i>{name}</i>.

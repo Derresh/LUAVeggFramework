@@ -15,6 +15,7 @@ function setupVars ()
     SUSTAIN_ACTION_TYPES={"Standard","Move","Minor","Free"},
     ABILITY_BONUS_NAMES={"None","Strength","Constitution","Dexterity","Intelligence","Wisdom","Charisma"},
     ATTACK_ROLLS={"1d20","2d20 drop lowest","2d20 drop lowest crit on equal","2d20 drop highest","No Roll"},
+    DAMAGE_REROLLS={"Normal","Roll twice drop lowest","Roll twice drop highest"},
     ABILITY_BONUSES={"0","StrBonus","ConBonus","DexBonus","IntBonus","WisBonus","ChaBonus"},
     DEFENSE_NAMES={"None","AC","Fortitude","Reflex","Will"},
     REPETITIONS={"0","1","2","3","4","5","6","7","8","9","10"},
@@ -166,7 +167,7 @@ function evalDamageConditional(cond, attack, target, state)
       end
     elseif cond.Affects == 8 then
       local r = evalConditional(cond, attack, target)
-      if r ~= nil then
+      if r ~= nil and state.dmgDiceMultiplier > 0 then
         state.dmgDiceMultiplier = state.dmgDiceMultiplier + r.Value
         state.dmgDiceMultiplier = math.max(0, state.dmgDiceMultiplier)
       end
@@ -233,51 +234,83 @@ function executeDamage(attack, equip, power)
   attack.isCrit = false
   local equip = getWeapon(attack)
   local state = makeDamageState(attack, equip)
+  local state2 = makeDamageState(attack, equip)
   state.powerBonus = tonumber(eval(attack.DmgBonus) or 0)
+  state2.powerBonus = tonumber(eval(attack.DmgBonus) or 0)
   if not (attack.Chk_IgnoreCondDmg == 1) then
     for i = 1, 100 do
       local c = "Conditional"..i
       if power[c] ~= nil then state = evalDamageConditional(power[c], attack, attack.target, state) end
       if equip[c] ~= nil then state = evalDamageConditional(equip[c], attack, attack.target, state) end
       if CONDITIONALS[c] ~= nil then state = evalDamageConditional(CONDITIONALS[c], attack, attack.target, state) end
+      if power[c] ~= nil then state2 = evalDamageConditional(power[c], attack, attack.target, state2) end
+      if equip[c] ~= nil then state2 = evalDamageConditional(equip[c], attack, attack.target, state2) end
+      if CONDITIONALS[c] ~= nil then state2 = evalDamageConditional(CONDITIONALS[c], attack, attack.target, state2) end
     end
   end 
   if state.dmgDice == 0 then state.dmgDice = "0d0" end
+  if state2.dmgDice == 0 then state2.dmgDice = "0d0" end
   local dmgDiceList = {}
   local dmgDiceResult = 0
+  local dmgDiceList2 = {}
+  local dmgDiceResult2 = 0
   for i = 1, state.dmgDiceMultiplier do
     local r = eval(state.dmgDice)
     table.insert(dmgDiceList, r)
     dmgDiceResult = dmgDiceResult + r
   end
+  for i = 1, state2.dmgDiceMultiplier do
+    local r = eval(state2.dmgDice)
+    table.insert(dmgDiceList2, r)
+    dmgDiceResult2 = dmgDiceResult2 + r
+  end
   local result = dmgDiceResult + state.stat + state.enh + state.misc + state.powerBonus + tonumber(attack.dmgMod or 0)
+  local result2 = dmgDiceResult2 + state2.stat + state2.enh + state2.misc + state2.powerBonus + tonumber(attack.dmgMod or 0)
   for i, v in ipairs(state.conditional) do
     result = result + v.value
+  end
+  for i, v in ipairs(state2.conditional) do
+    result2 = result2 + v.value
   end
   local t = 0
   for i, v in ipairs(state.targeted) do
     t = t + v.value
   end
+  local t2 = 0
+  for i, v in ipairs(state2.targeted) do
+    t2 = t2 + v.value
+  end
+  local showboth = attack.ReRoll and attack.ReRoll > 0
+  local resultfinal = result
+  local tfinal = t
+  if attack.ReRoll and attack.ReRoll == 1 and result+t < result2+t2 then
+    resultfinal = result2;
+    tfinal = t2;
+  end
+  if attack.ReRoll and attack.ReRoll == 2 and result+t > result2+t2 then
+    resultfinal = result2;
+    tfinal = t2;
+  end
   if not token.npc or TOOLTIPS == 0 then
     print("<span title='<html>")
     if attack.Chk_MultiDmgRolls == 1 or attack.iteration == 1 then
       if token.pc then print("<font size=", BIG, "><i>", escape(escape(equip.Name)), ":&nbsp;</i></font>") end
-      if dmgDiceResult > 0 then print("<font size=", BIG, ">", dmgDiceResult, "</font> (", state.dmgDiceMultiplier, "[", state.dmgDice, "]:", toStr(dmgDiceList)) end
-      if state.powerBonus ~= 0 then print("+ <font size=", BIG, ">", state.powerBonus, "</font> (", attack.DmgBonus, ")") end
+      if dmgDiceResult > 0 then print("<font size=", BIG, ">",  showboth and dmgDiceResult2..", " or "", dmgDiceResult, "</font> (", state.dmgDiceMultiplier, "[", state.dmgDice, "]:", showboth and toStr(dmgDiceList2).."; " or "", toStr(dmgDiceList)) end
+      if state.powerBonus ~= 0 then print("+ <font size=", BIG, ">", showboth and state2.powerBonus..", " or "", state.powerBonus, "</font> (", attack.DmgBonus, ")") end
       if attack.DmgAbility ~= 0 then print("+ <font size=", BIG, ">", state.stat, "</font> (", VARS.ABILITY_BONUSES[attack.DmgAbility + 1] ,")") end
       if state.enh ~= 0 then print("+ <font size=", BIG, ">", state.enh, "</font> (enhance)") end
       if state.misc ~= 0 then print("+ <font size=", BIG, ">", state.misc, "</font> (misc.)") end
-      for i, v in ipairs(state.conditional) do print("+ <font size=", BIG, ">", v.value, "</font> (", escape(escape(v.text)), ")") end 
+      for i, v in ipairs(state.conditional) do print("+ <font size=", BIG, ">", showboth and state2.conditional[i] and state2.conditional[i].value ~= v.value and state2.conditional[i].value..", " or "", v.value, "</font> (", escape(escape(v.text)), ")") end 
       if attack.dmgMod ~= 0 then print("+ <font size=", BIG, ">", attack.dmgMod, "</font> (temp)") end
-      print("= <font size=",BIGGER, ">", result, "</font>")
+      print("= <font size=",BIGGER, ">", showboth and result2..", " or "", result, "</font>")
     end
-    for i, v in ipairs(state.targeted) do print("+ <font size=", BIG, ">", v.value, "</font> (", v.text, ")") end
+    for i, v in ipairs(state.targeted) do print("+ <font size=", BIG, ">", showboth and state2.targeted[i] and state2.targeted[i].value ~= v.value and state2.targeted[i].value..", " or "", v.value, "</font> (", v.text, ")") end
     print("</html>'>")
-    if attack.Chk_MultiDmgRolls == 1 or attack.iteration == 1 then print("<i><b>", result, t > 0 and " + "..t or "","</b> ", state.dmgType, " damage</i>.")
-    elseif t > 0 then print("<i><b> + ", t, "</b> ", state.dmgType, " damage</i>.") end
+    if attack.Chk_MultiDmgRolls == 1 or attack.iteration == 1 then print("<i><b>", resultfinal, tfinal > 0 and " + "..tfinal or "","</b> ", state.dmgType, " damage</i>.")
+    elseif math.max(t,t2) > 0 then print("<i><b> + ", math.max(t,t2), "</b> ", state.dmgType, " damage</i>.") end
     print("</span>")
   else
-    if attack.Chk_MultiDmgRolls == 1 or attack.iteration == 1 then print("<i><b>", result, t>0 and " + "..t or "","</b> ", state.dmgType, " damage</i>.")
+    if attack.Chk_MultiDmgRolls == 1 or attack.iteration == 1 then print("<i><b>", resultfinal, tfinal > 0 and " + "..tfinal or "","</b> ", state.dmgType, " damage</i>.")
     elseif t > 0 then print("<i><b> + ", t, "</b> ", state.dmgType, " damage</i>.") end
   end
 end
@@ -411,7 +444,7 @@ function executeAttackRoll(attack, equip, power)
     if attack.Roll ~= nil and attack.Roll>0 and attack.Roll<4 then print(", ", die2," &#8658; ", die) end
     print("</font> (d20)")
     if lvl > 0 then print("+ <font size=", BIG, ">", lvl, "</font> (&frac12; Lvl)") end
-    if attack.DmgAbility ~= 0 then print("+ <font size=", BIG, ">", stat, "</font> (", VARS.ABILITY_BONUSES[attack.DmgAbility + 1] ,")") end
+    if attack.AttackAbility ~= 0 then print("+ <font size=", BIG, ">", stat, "</font> (", VARS.ABILITY_BONUSES[attack.AttackAbility + 1] ,")") end
     if prof > 0 then print("+ <font size=", BIG, ">", prof, "</font> (prof.)") end
     if enh > 0 then print("+ <font size=", BIG, ">", enh, "</font> (enhance)") end
     if feat > 0 then print("+ <font size=", BIG, ">", feat, "</font> (feat)") end
@@ -518,7 +551,7 @@ function executeAttack(attack, equip, power)
     if not (attack.Chk_IgnoreCond == 1) then
       for i = 1, 100 do
         local c = "Conditional"..i
-	if power[c] ~= nil and power[c].Affects == 5 then 
+  if power[c] ~= nil and power[c].Affects == 5 then 
           local r = evalConditional(power[c], attack, attack.target)
           if r ~= nil then 
             attack.Keywords = table.merge(attack.Keywords, fromStr(tostring(r.Value):lower(), ","))
@@ -603,6 +636,7 @@ function addExecuteAttack(t, attack, atk, dmg, prefix, prefix2)
   table.insert(t, {name=prefix.."dmgMod", content=dmg or 0, prompt=prefix2.."Damage mod", type="TEXT", width=4})
   table.insert(t, {name=prefix.."repeat", content=count, prompt=prefix2.."Repeat X times", type="LIST", select=attack.Repetitions or 0})
   table.insert(t, {name=prefix.."critThreshold", content=attack.CritThreshold, prompt=prefix2.."Critical threshold", type="TEXT", width=4})
+  table.insert(t, {name=prefix.."reroll", select=attack.DmgReRoll, prompt=prefix2.."Damage Roll", type="LIST", content=VARS.DAMAGE_REROLLS})
 end
 
 function loadVar(attack, r, prefix)
@@ -613,6 +647,7 @@ function loadVar(attack, r, prefix)
    attack.dmgMod = tonumber(r[prefix.."dmgMod"] or 0)
    attack.Repeat = tonumber(r[prefix.."repeat"] or 0)
    attack.CritThreshold = tonumber(r[prefix.."critThreshold"] or 20)
+   attack.ReRoll = r[prefix.."reroll"]
 end
 
 function append(t, value)
@@ -893,6 +928,74 @@ function executePowerMacro(power)
   if power.Chk_DisplayCustomRows == 1 and power.Chk_Custom == 1 then print(TABLE_START, "<b>", power.CustomLabel, ":</b> ", power.Custom, TABLE_END) end
   if power.Chk_DisplayCustomRows == 1 and power.Chk_Custom2 == 1 then print(TABLE_START, "<b>", power.CustomLabel2, ":</b> ", power.Custom2, TABLE_END) end
   if power.Chk_DisplayCustomRows == 1 and power.Chk_Custom3 == 1 then print(TABLE_START, "<b>", power.CustomLabel3, ":</b> ", power.Custom3, TABLE_END) end
+  if power.Chk_DisplayCustomRows == 1 then
+    for i = 1, 100 do
+      local c = "Conditional"..i
+      if power[c] ~= nil and power[c].Affects == 9 then 
+        local r = primaryAttack.Chk_Attack == 1 and evalConditional(power[c], primaryAttack, nil) or nil
+        if r ~= nil then 
+          print(TABLE_START, "<b>", power[c].Name or "", ":</b> ", table.pack(macro.eval(r.Value))[2], TABLE_END)
+	else
+          r = secondaryAttack.Chk_Attack == 1 and evalConditional(power[c], secondaryAttack, nil) or nil
+	  if r ~= nil then 
+            print(TABLE_START, "<b>", power[c].Name or "", ":</b> ", table.pack(macro.eval(r.Value))[2], TABLE_END)
+          else
+            r = tertiaryAttack.Chk_Attack == 1 and evalConditional(power[c], tertiaryAttack, nil) or nil
+	    if r ~= nil then 
+              print(TABLE_START, "<b>", power[c].Name or "", ":</b> ", table.pack(macro.eval(r.Value))[2], TABLE_END)
+	    end
+	  end
+        end
+      end
+      local done = {}
+      if primaryAttack.Chk_Attack == 1 then
+        done[primaryAttack.Equip] = i
+        local equip = getWeapon(primaryAttack)
+        if equip[c] ~= nil and equip[c].Affects == 9 then 
+          local r = evalConditional(equip[c], primaryAttack, nil)
+          if r ~= nil then 
+            print(TABLE_START, "<b>", equip[c].Name or "", ":</b> ", table.pack(macro.eval(r.Value))[2], TABLE_END)
+          end
+        end
+      end
+      if secondaryAttack.Chk_Attack == 1 and done[secondaryAttack.Equip] ~= i then
+        done[secondaryAttack.Equip] = i
+        local equip = getWeapon(secondaryAttack)
+        if equip[c] ~= nil and equip[c].Affects == 9 then 
+          local r = evalConditional(equip[c], secondaryAttack, nil)
+          if r ~= nil then 
+            print(TABLE_START, "<b>", equip[c].Name or "", ":</b> ", table.pack(macro.eval(r.Value))[2], TABLE_END)
+          end
+        end
+      end
+      if tertiaryAttack.Chk_Attack == 1 and done[tertiaryAttack.Equip] ~= i then
+        done[tertiaryAttack.Equip] = i
+        local equip = getWeapon(tertiaryAttack)
+        if equip[c] ~= nil and equip[c].Affects == 9 then 
+          local r = evalConditional(equip[c], tertiaryAttack, nil)
+          if r ~= nil then 
+            print(TABLE_START, "<b>", equip[c].Name or "", ":</b> ", table.pack(macro.eval(r.Value))[2], TABLE_END)
+          end
+        end
+      end
+      if CONDITIONALS[c] ~= nil and CONDITIONALS[c].Affects == 9 then 
+        local r = primaryAttack.Chk_Attack == 1 and evalConditional(CONDITIONALS[c], primaryAttack, nil) or nil
+        if r ~= nil then 
+          print(TABLE_START, "<b>", CONDITIONALS[c].Name or "", ":</b> ", table.pack(macro.eval(r.Value))[2], TABLE_END)
+	else
+          r = secondaryAttack.Chk_Attack == 1 and evalConditional(CONDITIONALS[c], secondaryAttack, nil) or nil
+	  if r ~= nil then 
+            print(TABLE_START, "<b>", CONDITIONALS[c].Name or "", ":</b> ", table.pack(macro.eval(r.Value))[2], TABLE_END)
+          else
+            r = tertiaryAttack.Chk_Attack == 1 and evalConditional(CONDITIONALS[c], tertiaryAttack, nil) or nil
+	    if r ~= nil then 
+              print(TABLE_START, "<b>", CONDITIONALS[c].Name or "", ":</b> ", table.pack(macro.eval(r.Value))[2], TABLE_END)
+	    end
+	  end
+        end
+      end
+    end
+  end
 
   if power.Chk_CustomCode == 1 and not (DISABLE == 1) then
     print("<table border=0 cellspacing=0><tr bgcolor='#D6D7C6'>")
@@ -911,11 +1014,11 @@ function executePowerMacro(power)
   if power.AssState1 ~= ""  or power.AssState2 ~= "" or power.AssState3 ~= "" or power.AssState4 ~= "" or power.AssState5 ~= "" then
     print("<table cellspacing=0><tr bgcolor='#D6D7C6'><td><i>Click to toggle</i></td>")
     for i = 1,5 do
-		if power["AssState"..i] ~= "" then
-			local state = translateState(power["AssState"..i])
-			local ss = campaign.allStates[state] or {}
-			print("<td><img height=15 width=15 src='", ss.image or "" ,"'></img></td><td><b>",macro.link(escape(state), "toggleState@Lib:Veg", "none", state, "selected"),"</b></td>")
-		end
+    if power["AssState"..i] ~= "" then
+      local state = translateState(power["AssState"..i])
+      local ss = campaign.allStates[state] or {}
+      print("<td><img height=15 width=15 src='", ss.image or "" ,"'></img></td><td><b>",macro.link(escape(state), "toggleState@Lib:Veg", "none", state, "selected"),"</b></td>")
+    end
     end
     print("<td><i>on Selected Target(s)</i></td></tr></table>")
   end
@@ -927,3 +1030,4 @@ function executePowerMacro(power)
 end
 
 executePowerMacro(macro.args)
+

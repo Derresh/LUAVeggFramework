@@ -1,0 +1,265 @@
+<!-- Veggiesama's createPowerMacro macro, MapTool B70 -->
+
+<!-- Define some useful lists -->
+[MACRO("pmSetupVars@Lib:Veg"):""]
+[H: varsFromStrProp(macro.return)]
+
+[MACRO("pmSetupStates@Lib:Veg"):""]
+[H: varsFromStrProp(macro.return)]
+
+<!-- Power creation input dialog. The q is a hacky way to get single quotes in there. -->
+[h:conditional1 = json.get(LastPower, "Conditional1")]
+[H, IF(json.isEmpty(conditional1)): conditional1="{}"]
+[H: conditional2 = json.get(LastPower, "Conditional2")]
+[H, IF(json.isEmpty(conditional2)): conditional2="{}"]
+[H: conditional3 = json.get(LastPower, "Conditional3")]
+[H, IF(json.isEmpty(conditional3)): conditional3="{}"]
+[H: conditional4 = json.get(LastPower, "Conditional4")]
+[H, IF(json.isEmpty(conditional4)): conditional4="{}"]
+[H: conditional5 = json.get(LastPower, "Conditional5")]
+[H, IF(json.isEmpty(conditional5)): conditional5="{}"]
+[MACRO("pmDialog@Lib:Veg"):""]
+[H: q = "'"]
+[H: inputStr = eval(macro.return)]
+[H: abort(inputStr)]
+
+<!-- Make sure there's some separation between attack/hit and AttackAppend/HitAppend -->
+[H, IF(!startsWith(AttackAppend, ".") && !startsWith(AttackAppend, ",") && !startsWith(AttackAppend, " ")):
+	AttackAppend = " " + AttackAppend]
+[H, IF(!startsWith(HitAppend, ".") && !startsWith(HitAppend, ",") && !startsWith(HitAppend, " ")):
+	HitAppend = " " + HitAppend]
+[H, IF(!startsWith(SecAttackAppend, ".") && !startsWith(SecAttackAppend, ",") && !startsWith(SecAttackAppend, " ")):
+	SecAttackAppend = " " + SecAttackAppend]
+[H, IF(!startsWith(SecHitAppend, ".") && !startsWith(SecHitAppend, ",") && !startsWith(SecHitAppend, " ")):
+	SecHitAppend = " " + SecHitAppend]
+[H, IF(!startsWith(TertAttackAppend, ".") && !startsWith(TertAttackAppend, ",") && !startsWith(TertAttackAppend, " ")):
+	TertAttackAppend = ". " + TertAttackAppend]
+[H, IF(!startsWith(TertHitAppend, ".") && !startsWith(TertHitAppend, ",") && !startsWith(TertHitAppend, " ")):
+	TertHitAppend = " " + TertHitAppend]
+
+<!-- Remember user's preferences for next time -->
+[H: primaryAttack = "{}"]
+[H: secondaryAttack = "{}"]
+[H: tertiaryAttack = "{}"]
+
+[H: primaryAttack = json.set(primaryAttack,
+  "Chk_Target", Chk_Target,
+  "Target", Target,
+  "Chk_Attack", Chk_Attack,
+  "Equip", Equip,
+  "AttackRoll", AttackRoll,
+  "AttackAbility", AttackAbility,
+  "AttackBonus", AttackBonus,
+  "VsDefense", VsDefense,
+  "Repetitions", Repetitions,
+  "Chk_MultiDmgRolls", Chk_MultiDmgRolls,
+  "CritThreshold", CritThreshold,
+  "Chk_IgnoreProf", Chk_IgnoreProf,
+  "Chk_IgnoreLevel", Chk_IgnoreLevel,
+  "Chk_IgnoreDamage", Chk_IgnoreDamage,
+  "Chk_IgnoreMisc", Chk_IgnoreMisc,
+  "Chk_IgnoreEnh", Chk_IgnoreEnh,
+  "Chk_IgnoreCondDmg", Chk_IgnoreCondDmg,
+  "Chk_IgnoreFeat", Chk_IgnoreFeat,
+  "Chk_IgnoreCond", Chk_IgnoreCond,
+  "DmgAbility", DmgAbility,
+  "DmgDice", DmgDice,
+  "DmgRoll", DmgRoll,
+  "DmgBonus", DmgBonus,
+  "DmgBonusMax", DmgBonusMax,
+  "DmgType", DmgType,
+  "DmgReRoll", ReRoll,
+  "AttackAppend", AttackAppend,
+  "HitAppend", HitAppend,
+  "Chk_Miss", Chk_Miss,
+  "Miss", Miss
+)]
+
+[H: secondaryAttack = json.set(secondaryAttack,
+  "Chk_Target", Chk_SecTarget,
+  "Target", SecTarget,
+  "Chk_Attack", Chk_SecAttack,
+  "Equip", SecEquip,
+  "AttackRoll", SecAttackRoll,
+  "AttackAbility", SecAttackAbility,
+  "AttackBonus", SecAttackBonus,
+  "VsDefense", SecVsDefense,
+  "Repetitions", SecRepetitions,
+  "Chk_MultiDmgRolls", Chk_SecMultiDmgRolls,
+  "CritThreshold", SecCritThreshold,
+  "Chk_IgnoreProf", Chk_SecIgnoreProf,
+  "Chk_IgnoreLevel", Chk_SecIgnoreLevel,
+  "Chk_IgnoreDamage", Chk_SecIgnoreDamage,
+  "Chk_IgnoreMisc", Chk_SecIgnoreMisc,
+  "Chk_IgnoreEnh", Chk_SecIgnoreEnh,
+  "Chk_IgnoreCondDmg", Chk_SecIgnoreCondDmg,
+  "Chk_IgnoreFeat", Chk_SecIgnoreFeat,
+  "Chk_IgnoreCond", Chk_SecIgnoreCond,
+  "DmgAbility", SecDmgAbility,
+  "DmgDice", SecDmgDice,
+  "DmgRoll", SecDmgRoll,
+  "DmgBonus", SecDmgBonus,
+  "DmgBonusMax", SecDmgBonusMax,
+  "DmgType", SecDmgType,
+  "DmgReRoll", SecReRoll,
+  "AttackAppend", SecAttackAppend,
+  "HitAppend", SecHitAppend,
+  "Chk_Miss", Chk_SecMiss,
+  "Miss", SecMiss
+)]
+
+[H: tertiaryAttack = json.set(tertiaryAttack,
+  "Chk_Target", Chk_TertTarget,
+  "Target", TertTarget,
+  "Chk_Attack", Chk_TertAttack,
+  "Equip", TertEquip,
+  "AttackRoll", TertAttackRoll,
+  "AttackAbility", TertAttackAbility,
+  "AttackBonus", TertAttackBonus,
+  "VsDefense", TertVsDefense,
+  "Repetitions", TertRepetitions,
+  "Chk_MultiDmgRolls", Chk_TertMultiDmgRolls,
+  "CritThreshold", TertCritThreshold,
+  "Chk_IgnoreProf", Chk_TertIgnoreProf,
+  "Chk_IgnoreLevel", Chk_TertIgnoreLevel,
+  "Chk_IgnoreDamage", Chk_TertIgnoreDamage,
+  "Chk_IgnoreMisc", Chk_TertIgnoreMisc,
+  "Chk_IgnoreEnh", Chk_TertIgnoreEnh,
+  "Chk_IgnoreCondDmg", Chk_TertIgnoreCondDmg,
+  "Chk_IgnoreFeat", Chk_TertIgnoreFeat,
+  "Chk_IgnoreCond", Chk_TertIgnoreCond,
+  "DmgAbility", TertDmgAbility,
+  "DmgDice", TertDmgDice,
+  "DmgRoll", TertDmgRoll,
+  "DmgBonus", TertDmgBonus,
+  "DmgBonusMax", TertDmgBonusMax,
+  "DmgType", TertDmgType,
+  "DmgReRoll", TertReRoll,
+  "AttackAppend", TertAttackAppend,
+  "HitAppend", TertHitAppend,
+  "Chk_Miss", Chk_TertMiss,
+  "Miss", TertMiss
+)]
+
+[H: LastPower = json.set(LastPower,
+  "PowerName", PowerName,
+  "PowerNum", PowerNum,
+
+  "ActionType", ActionType,
+  "Chk_Keywords", Chk_Keywords,
+  "Keywords", Keywords,
+  "Chk_FlavorText", Chk_FlavorText,
+  "FlavorText", FlavorText,
+  "AttackType", AttackType,
+  "Chk_Range", Chk_Range,
+  "Range", Range,
+  "Chk_Requirement", Chk_Requirement,
+  "Requirement", Requirement,
+  "Chk_Trigger", Chk_Trigger,
+  "Trigger", Trigger,
+
+  "PrimaryAttack", primaryAttack,
+  "SecondaryAttack", secondaryAttack,
+  "TertiaryAttack", tertiaryAttack,
+
+  "Chk_Effect", Chk_Effect,
+  "Effect", Effect,
+  "Chk_PreEffect", Chk_PreEffect,
+  "PreEffect", PreEffect,
+  "Chk_PriEffect", Chk_PriEffect,
+  "PriEffect", PriEffect,
+  "Chk_SecEffect", Chk_SecEffect,
+  "SecEffect", SecEffect,
+  "Chk_TertEffect", Chk_TertEffect,
+  "TertEffect", TertEffect,
+
+  "Chk_Sustain", Chk_Sustain,
+  "SustainActionType", SustainActionType,
+  "SustainDesc", SustainDesc,
+  "Chk_Special", Chk_Special,
+  "Special", Special,
+  "Chk_Augment", Chk_Augment,
+  "Augment", Augment,
+  "Chk_Custom", Chk_Custom,
+  "CustomLabel", CustomLabel,
+  "Custom", Custom,
+  "Chk_Custom2", Chk_Custom2,
+  "CustomLabel2", CustomLabel2,
+  "Custom2", Custom2,
+  "Chk_Custom3", Chk_Custom3,
+  "CustomLabel3", CustomLabel3,
+  "Custom3", Custom3,  
+  
+  "Chk_ShortDescription", Chk_ShortDescription,
+  "ShortDescription", ShortDescription,
+  "Chk_DisplayFlavorText", Chk_DisplayFlavorText,
+  "Chk_DisplayTrigger", Chk_DisplayTrigger,
+  "Chk_DisplayHits", Chk_DisplayHits,
+  "Chk_DisplayMisses", Chk_DisplayMisses,
+  "Chk_DisplayEffect", Chk_DisplayEffect,
+  "Chk_DisplaySustain", Chk_DisplaySustain,
+  "Chk_DisplaySpecial", Chk_DisplaySpecial,
+  "Chk_DisplayCustomRows", Chk_DisplayCustomRows,
+  "AssState1", AssState1,
+  "AssState2", AssState2,
+  "AssState3", AssState3,
+  "AssState4", AssState4,
+  "AssState5", AssState5,
+  
+  "Chk_CustomCode", Chk_CustomCode,
+  "Chk_CustomCodeHasTarget", Chk_CustomCodeHasTarget,
+  "CustomCode", CustomCode,
+  "Chk_Supplement", Chk_Supplement,
+
+  "Chk_ToolTip", Chk_ToolTip,
+  "Group", Group,
+  "SortPrefix", SortPrefix,
+  "MinWidth", MinWidth,
+  "FontSize", FontSize
+)]
+
+[H, COUNT(5), CODE: {
+	[H: i = roll.count + 1]
+	[H: LastPower=json.set(LastPower,"Conditional"+i, json.set("{}",
+		"Name",eval("cond"+i+"name"),
+		"Affects",eval("cond"+i+"affects"),
+		"From",eval("cond"+i+"from"),
+		"Keyword",eval("cond"+i+"keyword"),
+		"Keyword2",eval("cond"+i+"keyword2"),
+		"Keyword3",eval("cond"+i+"keyword3"),
+		"Defense",eval("cond"+i+"defense"),
+		"Ability",eval("cond"+i+"ability"),
+		"Type",eval("cond"+i+"type"),
+		"Roll",eval("cond"+i+"roll"),
+		"State",eval("cond"+i+"state"),
+		"Expression",eval("cond"+i+"expression"),
+		"Reverse",eval("cond"+i+"reverse"),
+		"Value",eval("cond"+i+"value"),
+		"Max",eval("cond"+i+"max")
+	))]
+	
+}]
+
+<!-- If a button with the same name already exists, delete it. -->
+[H, FOREACH(index, getMacroIndexes(PowerName)): removeMacro(index)]
+
+<!-- Create and save it -->
+[MACRO("pmOutputMacro@Lib:Veg"):PowerName]
+[H: macroIndex = createMacro(PowerName, decode(macro.return),
+	"fontColor=" + listGet(MACRO_BUTTON_FONT_COLORS, PowerNum)
+	+ "; color=" + listGet(MACRO_BUTTON_COLORS, PowerNum)
+	+ "; group=" + Group
+	+ "; fontSize=" + listGet(MACRO_BUTTON_FONT_SIZES, FontSize)
+	+ if(listGet(MACRO_BUTTON_SORT_PREFIXES, SortPrefix) != "None",
+		"; sortBy=" + listGet(MACRO_BUTTON_SORT_PREFIXES, SortPrefix), "")
+	+ "; minWidth=" + listGet(MACRO_BUTTON_MIN_WIDTHS, MinWidth)
+	+ ";")]
+[H: setMacroProps(macroIndex, "tooltip="
+	+ if(Chk_ToolTip,
+	  "[MACRO('buttonTooltip@Lib:Veg'):getMacroButtonIndex()]"
+	  , PowerName + if(Chk_ShortDescription, ": " + ShortDescription, "")
+	) + ";")]
+
+[MACRO("savePowerMacro@Lib:Veg"):""]
+
+<b>Successfully created or modified the <font color=" +  listGet(POWER_COLORS, PowerNum) + ">{PowerName} macro!</b></font>
