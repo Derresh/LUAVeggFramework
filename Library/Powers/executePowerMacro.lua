@@ -51,7 +51,9 @@ function translateState(oldState)
   return STATE_TRANSLATIONS[oldState] or oldState
 end
 
-local function escape(s)
+local function escape(s)  
+  if s == nil then return ""
+  s = tostring(s)
   s = s:gsub('&', '&amp;')
   s = s:gsub('<', '&lt;')
   s = s:gsub('>', '&gt;')
@@ -529,7 +531,7 @@ end
 
 function executeAttack(attack, equip, power)
   equip = equip or getWeapon(attack)
-  local keywords = attack.Keywords:lower()
+  local keywords = attack.Keywords and tostring(attack.Keywords):lower() or ""
   for i = 1, attack.Repeat do
     attack.iteration = i
     print("<tr bgcolor='#D6D7C6'>")
